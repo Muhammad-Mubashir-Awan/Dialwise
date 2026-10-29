@@ -1,0 +1,142 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { calls, leads, lists } from "@/lib/db/schema";
+import { createTestDb, resetTestDb, type TestDb } from "../helpers/db";
+
+// The actions use the app's database and session; point them at PGlite and a switchable sign-in.
+const mocks = vi.hoisted(() => ({
+  db: undefined as unknown as TestDb,
+  signedIn: true,
+  refresh: vi.fn(),
+}));
+vi.mock("@/lib/db/client", () => ({ getDb: () => mocks.db }));
+vi.mock("next/cache", () => ({ refresh: mocks.refresh }));
+vi.mock("@/lib/session", () => ({
+  requireUser: async () => {
+    // The real requireUser redirects, which throws inside an action.
+    if (!mocks.signedIn) throw new Error("NEXT_REDIRECT;/login");
+    return { email: "owner@example.test", name: "Owner", image: null };
+  },
+}));
+
+const { deleteLeadAction, saveLead } = await import("@/lib/actions/leads");
+const { deleteListAction, saveList } = await import("@/lib/actions/lists");
+
+let close: () => Promise<void>;
+
+beforeAll(async () => {
+  ({ db: mocks.db, close } = await createTestDb());
+});
+beforeEach(async () => {
+  await resetTestDb(mocks.db);
+  mocks.signedIn = true;
+  mocks.refresh.mockClear();
+});
+afterAll(async () => {
+  await close();
+});
+
+const formData = (fields: Record<string, string>) => {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(fields)) data.set(key, value);
+  return data;
+};
+const initial = { errors: {}, submittedAt: 0 };
+const leadForm = (fields: Record<string, string> = {}) =>
+  formData({ name: "Amelia Hart", phone: "020 7946 0118", country: "GB", ...fields });
+
+describe("saveLead", () => {
+  it("adds a lead from the form and refreshes the page", async () => {
+    const state = await saveLead(initial, leadForm({ tags: "SaaS, warm" }));
+
+    const [lead] = await mocks.db.select().from(leads);
+    expect(state.saved).toEqual({ id: lead.id, name: "Amelia Hart", created: true });
+    expect(lead).toMatchObject({
+      phoneE164: "+442079460118",
+      country: "GB",
+      timezone: "Europe/London",
+      tags: ["saas", "warm"],
+    });
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("updates the lead named by the form's id", async () => {
+    const created = await saveLead(initial, leadForm());
+    const id = created.saved!.id;
+
+    const state = await saveLead(initial, leadForm({ id, name: "Amelia Hart-Jones" }));
+
+    expect(state.saved).toEqual({ id, name: "Amelia Hart-Jones", created: false });
+    expect(await mocks.db.select({ name: leads.name }).from(leads)).toEqual([{ name: "Amelia Hart-Jones" }]);
+  });
+
+  it("returns field errors without saving or refreshing", async () => {
+    const state = await saveLead(initial, leadForm({ name: "", phone: "12" }));
+
+    expect(Object.keys(state.errors).sort()).toEqual(["name", "phone"]);
+    expect(await mocks.db.select().from(leads)).toEqual([]);
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("says when the lead being edited was deleted meanwhile", async () => {
+    const state = await saveLead(initial, leadForm({ id: "6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60" }));
+    expect(state.formError).toBe("This lead was deleted, so the changes weren't saved.");
+  });
+
+  it("saves nothing when nobody is signed in", async () => {
+    mocks.signedIn = false;
+    await expect(saveLead(initial, leadForm())).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(leads)).toEqual([]);
+  });
+});
+
+describe("deleteLeadAction", () => {
+  it("deletes the lead and its calls", async () => {
+    const id = (await saveLead(initial, leadForm())).saved!.id;
+    await mocks.db.insert(calls).values({ leadId: id, outcome: "no_answer" });
+
+    expect(await deleteLeadAction(id)).toEqual({ ok: true, name: "Amelia Hart" });
+    expect(await mocks.db.select().from(calls)).toEqual([]);
+  });
+
+  it("says when the lead was already deleted", async () => {
+    expect(await deleteLeadAction("6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60")).toEqual({
+      ok: false,
+      error: "This lead was already deleted.",
+    });
+  });
+
+  it("deletes nothing when nobody is signed in", async () => {
+    const id = (await saveLead(initial, leadForm())).saved!.id;
+    mocks.signedIn = false;
+    await expect(deleteLeadAction(id)).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(leads)).toHaveLength(1);
+  });
+});
+
+describe("list actions", () => {
+  it("creates, renames and deletes a list", async () => {
+    expect(await saveList({ submittedAt: 0 }, formData({ name: " Dental clinics " }))).toMatchObject({
+      savedName: "Dental clinics",
+    });
+    const [list] = await mocks.db.select().from(lists);
+
+    expect(await saveList({ submittedAt: 0 }, formData({ id: list.id, name: "Dentists" }))).toMatchObject({
+      savedName: "Dentists",
+    });
+    expect(await deleteListAction(list.id)).toEqual({ ok: true, name: "Dentists" });
+    expect(await mocks.db.select().from(lists)).toEqual([]);
+    expect(mocks.refresh).toHaveBeenCalledTimes(3);
+  });
+
+  it("returns the problem with a name", async () => {
+    expect(await saveList({ submittedAt: 0 }, formData({ name: "  " }))).toMatchObject({
+      error: "Enter a name for the list.",
+    });
+  });
+
+  it("changes nothing when nobody is signed in", async () => {
+    mocks.signedIn = false;
+    await expect(saveList({ submittedAt: 0 }, formData({ name: "Dental clinics" }))).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(lists)).toEqual([]);
+  });
+});

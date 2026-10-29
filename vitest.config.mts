@@ -8,5 +8,7 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     environment: "node",
+    // Each integration file starts its own in-memory Postgres; several booting at once can take over 10s.
+    hookTimeout: 30_000,
   },
 });
