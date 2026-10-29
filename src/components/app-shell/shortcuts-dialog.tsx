@@ -33,6 +33,7 @@ const SECTIONS: { title: string; keys: [string, string[]][] }[] = [
       ["Move down / up", ["J / K"]],
       ["Open lead", ["Enter"]],
       ["Add lead", ["A"]],
+      ["Edit the open lead", ["E"]],
     ],
   },
 ];

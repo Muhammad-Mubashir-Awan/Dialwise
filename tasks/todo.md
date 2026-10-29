@@ -43,14 +43,16 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [ ] Owner has set `.env.local` (Neon, Google OAuth, AUTH_SECRET, ALLOWED_EMAIL) and can sign in locally
 
 ## Phase 3: Core features
-- [ ] Task: Phone utilities (TDD)
+- [x] Task: Phone utilities (TDD)
   - Acceptance: normalize to E.164 with default country, detect country, guess time zone when the country has one zone
   - Verify: unit tests for US, UK, PK, IN, AU, DE numbers and invalid input
-  - Files: src/lib/phone.ts, tests/phone.test.ts
-- [ ] Task: Leads and lists CRUD (slice 4)
+  - Files: src/lib/phone.ts, src/lib/timezones.ts, tests/unit/phone.test.ts, tests/unit/timezones.test.ts
+  - Result: "00" prefixes work whatever the default country; zones come from the server's ICU data with today's names (Asia/Kolkata, Europe/Kyiv); mutation-checked.
+- [x] Task: Leads and lists CRUD (slice 4)
   - Acceptance: create/edit/delete with Zod; leads table filters (list, status, tag, search); lead detail with call history
   - Verify: integration tests on actions; e2e create lead
-  - Files: src/lib/actions/leads.ts, src/lib/actions/lists.ts, src/app/leads/, src/app/lists/
+  - Files: src/lib/lead-input.ts, src/lib/data/, src/lib/actions/leads.ts, src/lib/actions/lists.ts, src/app/(app)/leads/, src/app/(app)/lists/, src/components/leads/, src/components/lists/
+  - Result: 162 unit/integration and 48 e2e tests (desktop and phone). Switched the database driver to node-postgres (real transactions; e2e runs on an in-memory PGlite over TCP). Status only changes through logged calls. The lists table's "Work list" and "Export" buttons come with slices 5 and 7.
 - [ ] Task: Outcome transitions (TDD)
   - Acceptance: transition table; attempts never downgrade interested/callback; DNC terminal
   - Verify: unit tests for every outcome × status pair that matters
@@ -58,7 +60,8 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [ ] Task: Queue + call logging (slice 5)
   - Acceptance: queue query per SPEC (terminal statuses, retry gap, local call window, ordering, list scope); `logCall` writes the call and the lead update atomically (see "Decide first" below); `/queue` UI with keys 1–9, note, follow-up picker
   - Verify: PGlite tests across time zones; `logCall` atomicity; DNC never served; e2e work-the-queue
-  - Decide first: `db.batch` exists on Neon's HTTP driver but not on PGlite. Write `logCall` as one SQL statement (a data-modifying CTE: insert the call and update the lead together), which is atomic on both, or switch the app to Neon's WebSocket driver, which supports transactions.
+  - Decided in slice 4: the app now uses node-postgres, so `logCall` uses `db.transaction` (also works on PGlite in tests).
+  - Watch: the e2e database (pglite-socket) shares one Postgres session across connections, so concurrent transactions can interleave there. If e2e tests start mixing transactions, run the test server with a pool of one connection.
   - Files: src/lib/queue.ts, src/lib/actions/calls.ts, src/app/queue/
 - [ ] Task: `/review` on slices 4–5
 - [ ] Task: Follow-ups (slice 6)
@@ -82,6 +85,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [ ] Task: `/ship` checklist
 - [ ] Task: Deploy (slice 9)
   - Acceptance: Vercel project, env vars, prod migration, prod OAuth redirect
+  - Check: whether to add Vercel's `attachDatabasePool` (closes idle connections before a function sleeps). Left out in slice 4 because its dependency pulled in an old Zod with a known advisory.
   - Verify: owner signs in on prod; 10k seeded leads on a Neon branch → queue < 300 ms; Lighthouse ≥ 90 on `/queue`
 
 Run `/graphify . --update` after every slice from slice 3 on.

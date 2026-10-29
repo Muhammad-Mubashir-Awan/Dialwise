@@ -44,7 +44,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 
 ## Tech Stack
 - Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `proxy.ts` for early auth redirects
-- Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/neon-http` + drizzle-kit migrations. neon-http has no interactive transactions and PGlite (tests) has no `db.batch()`, so writes that must be atomic are single SQL statements (e.g. a data-modifying CTE); the exact approach for `logCall` is settled in slice 5.
+- Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/node-postgres` (a small `pg` pool on Neon's pooled connection string, Neon's recommended setup for Vercel) + drizzle-kit migrations. Writes that must be atomic, such as `logCall`, use `db.transaction`, which works the same on PGlite in tests.
 - Auth.js (NextAuth v5) with Google provider, JWT sessions (no auth tables)
 - Tailwind CSS + shadcn/ui; design tokens from `design/tokens.md`
 - Zod for validation; Papa Parse for CSV; libphonenumber-js for phone parsing
@@ -74,6 +74,7 @@ src/components/       → UI components (shadcn in components/ui)
 src/lib/db/           → Drizzle schema and client
 drizzle/              → generated SQL migrations (+ hand-written data migrations)
 src/lib/actions/      → server actions (leads, calls, lists, import)
+src/lib/data/         → database reads and writes; each takes the db, so tests pass PGlite
 src/lib/queue.ts      → next-lead selection logic (pure, unit tested)
 src/lib/csv.ts        → CSV parse/validate/dedupe (pure, unit tested)
 src/lib/stats.ts      → stats queries/aggregation
@@ -104,7 +105,7 @@ TypeScript strict, no `any`. Server actions validate input with Zod and check th
 // src/lib/actions/calls.ts
 "use server";
 import { z } from "zod";
-import { requireUser } from "@/auth";
+import { requireUser } from "@/lib/session";
 
 const LogCall = z.object({
   leadId: z.string().uuid(),
@@ -116,8 +117,7 @@ const LogCall = z.object({
 export async function logCall(input: unknown) {
   await requireUser();
   const data = LogCall.parse(input);
-  // Neon's HTTP driver has no transactions: recordCall writes the call and the lead
-  // update in one SQL statement, which is atomic (decided in slice 5).
+  // recordCall writes the call and the lead update in one transaction.
   return recordCall(getDb(), data);
 }
 ```
@@ -125,8 +125,8 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 
 ## Testing Strategy
 - **Unit (Vitest):** queue ordering, CSV parsing/dedupe, phone normalization, stats aggregation, outcome → status transitions. Target ≥ 90% on `src/lib` pure modules.
-- **Integration (Vitest + test Postgres):** server actions against a real test DB (log call, import, do-not-call rules).
-- **E2E (Playwright):** the core loop: sign in (mocked auth), import CSV, work queue, log outcomes, see follow-up due, view stats.
+- **Integration (Vitest + PGlite):** data functions and server actions against an in-memory Postgres with the real migrations (log call, import, do-not-call rules); actions are tested signed out too.
+- **E2E (Playwright):** the core loop: sign in (mocked auth), import CSV, work queue, log outcomes, see follow-up due, view stats. Runs a production build against an in-memory Postgres (PGlite over TCP), on desktop and phone sizes.
 - Bug fixes follow Prove-It: failing test first.
 
 ## Boundaries
@@ -149,6 +149,9 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 - Tags on leads: yes (v1). Custom fields: no.
 - Per-lead time zone and call window: yes (v1).
 - UI: designed first as a clickable HTML prototype (clean and dense, Linear-like, keyboard-first, light and dark), approved before app code.
+- Database driver: node-postgres instead of Neon's HTTP driver (slice 4). It gives real transactions and lets e2e tests run on a local in-memory Postgres. Vercel's `attachDatabasePool` helper was left out for now: it pulls in an old Zod with a known advisory; revisit at deploy (slice 9).
+- A lead's status changes only through logged calls; the lead form edits contact details, list, tags, time zone and notes (slice 4, as in the prototype).
+- Time zones per country come from the server's built-in ICU data. A lead's zone is guessed when its country keeps one time (or has one main zone, e.g. Spain → Madrid); otherwise it stays unknown until picked in the form.
 
 ## Open Questions
 None for v1.

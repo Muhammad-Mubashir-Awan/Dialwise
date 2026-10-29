@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Keyboard, LogOut, Phone, Search } from "lucide-react";
@@ -14,8 +15,7 @@ const itemClass =
   "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground pointer-coarse:min-h-11";
 
 export function SidebarNav() {
-  const pathname = usePathname();
-  const { openCommandMenu, openShortcuts, closeMobileNav } = useShell();
+  const { openCommandMenu, openShortcuts } = useShell();
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col gap-0.5 px-2 py-3">
@@ -26,35 +26,17 @@ export function SidebarNav() {
         Cold-Call CRM
       </div>
 
-      {(["work", "manage"] as const).map((group, gi) => (
-        <div key={group} className="flex flex-col gap-0.5">
-          {gi > 0 && <div role="separator" className="mx-1 my-2 h-px bg-border" />}
-          {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
-            const active = isActivePath(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMobileNav}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  itemClass,
-                  active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                <item.icon aria-hidden="true" className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+      {/* On pages whose address isn't known at build time (e.g. /leads/[id]), the links render
+          without the highlight first and highlight once the address is known. */}
+      <Suspense fallback={<NavLinks pathname={null} />}>
+        <CurrentNavLinks />
+      </Suspense>
 
       <div className="mt-auto flex flex-col gap-0.5 pt-3">
         <button type="button" className={itemClass} onClick={openCommandMenu}>
           <Search aria-hidden="true" className="size-4" />
           Search and commands
-          <Kbd className="ml-auto">Ctrl K</Kbd>
+          <Kbd className="ml-auto whitespace-nowrap">Ctrl K</Kbd>
         </button>
         <button type="button" className={itemClass} onClick={openShortcuts}>
           <Keyboard aria-hidden="true" className="size-4" />
@@ -71,4 +53,35 @@ export function SidebarNav() {
       </div>
     </nav>
   );
+}
+
+function CurrentNavLinks() {
+  return <NavLinks pathname={usePathname()} />;
+}
+
+function NavLinks({ pathname }: { pathname: string | null }) {
+  const { closeMobileNav } = useShell();
+  return (["work", "manage"] as const).map((group, gi) => (
+    <div key={group} className="flex flex-col gap-0.5">
+      {gi > 0 && <div role="separator" className="mx-1 my-2 h-px bg-border" />}
+      {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
+        const active = pathname !== null && isActivePath(pathname, item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={closeMobileNav}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              itemClass,
+              active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+            )}
+          >
+            <item.icon aria-hidden="true" className="size-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </div>
+  ));
 }

@@ -1,10 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-
-/** Opens an app page and waits until the shell's keyboard shortcuts are live. */
-async function open(page: Page, path: string) {
-  await page.goto(path);
-  await expect(page.locator("html")).toHaveAttribute("data-shell-ready", "true");
-}
+import { expect, test } from "@playwright/test";
+import { open } from "./app";
 
 test("opening the app lands on the queue", async ({ page }) => {
   await open(page, "/");
@@ -75,7 +70,7 @@ test.describe("mobile", () => {
   });
 
   test("pages never scroll sideways", async ({ page }) => {
-    for (const path of ["/queue", "/leads", "/stats", "/login"]) {
+    for (const path of ["/queue", "/leads", "/lists", "/stats", "/login"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, path).toBeLessThanOrEqual(0);
