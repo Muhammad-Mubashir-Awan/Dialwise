@@ -1,0 +1,71 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Keyboard, LogOut, Phone, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/ui/kbd";
+import { NAV_ITEMS, isActivePath } from "@/lib/nav";
+import { useShell } from "./shell-context";
+import { ThemeToggle } from "./theme-toggle";
+
+const itemClass =
+  "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground pointer-coarse:min-h-11";
+
+export function SidebarNav() {
+  const pathname = usePathname();
+  const { openCommandMenu, openShortcuts, closeMobileNav } = useShell();
+
+  return (
+    <nav aria-label="Main" className="flex h-full flex-col gap-0.5 px-2 py-3">
+      <div className="flex items-center gap-2.5 px-2 pt-1.5 pb-3.5 font-semibold tracking-tight">
+        <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
+          <Phone aria-hidden="true" className="size-3.5" strokeWidth={2.25} />
+        </span>
+        Cold-Call CRM
+      </div>
+
+      {(["work", "manage"] as const).map((group, gi) => (
+        <div key={group} className="flex flex-col gap-0.5">
+          {gi > 0 && <div role="separator" className="mx-1 my-2 h-px bg-border" />}
+          {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
+            const active = isActivePath(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeMobileNav}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  itemClass,
+                  active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <item.icon aria-hidden="true" className="size-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+
+      <div className="mt-auto flex flex-col gap-0.5 pt-3">
+        <button type="button" className={itemClass} onClick={openCommandMenu}>
+          <Search aria-hidden="true" className="size-4" />
+          Search and commands
+          <Kbd className="ml-auto">Ctrl K</Kbd>
+        </button>
+        <button type="button" className={itemClass} onClick={openShortcuts}>
+          <Keyboard aria-hidden="true" className="size-4" />
+          Shortcuts
+          <Kbd className="ml-auto">?</Kbd>
+        </button>
+        <ThemeToggle className={itemClass} />
+        <Link href="/login" className={itemClass} onClick={closeMobileNav}>
+          <LogOut aria-hidden="true" className="size-4" />
+          Sign out
+        </Link>
+      </div>
+    </nav>
+  );
+}
