@@ -1,84 +1,75 @@
 # Graph Report - CRM TOOL  (2026-10-30)
 
 ## Corpus Check
-- 30 files · ~55,515 words
+- 31 files · ~58,847 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 874 nodes · 2262 edges · 45 communities (42 shown, 3 thin omitted)
-- Extraction: 92% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 168 edges (avg confidence: 0.9)
-- Token cost: 158,546 tokens this run (the doc-extraction agent's total; no input/output split was reported). All runs so far: 602,132.
+- 920 nodes · 2433 edges · 36 communities (34 shown, 2 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 183 edges (avg confidence: 0.9)
+- Token cost: 136,624 tokens this run (the doc-extraction agent's total; no input/output split was reported). All runs so far: 738,756.
 
 ## Community Hubs (Navigation)
+- Leads and Lists Pages
 - Data Layer and Integration Tests
+- Queue Page and Outcomes
 - Google Sign-in and Session
-- Page Layout and Lists Page
+- App Shell and Navigation
+- Lead Input, Phones, Time Zones
 - E2E Test Setup
-- Queue Page and Call Actions
-- Prototype Domain Model
-- Lead Form Dialog
+- Queue Query and Call Hours
+- Prototype Interactions
 - Lead Display and Live Times
-- App Shell and Hotkeys
-- Project Documents
+- Command Menu and Dialogs
+- Follow-ups and Sidebar Counts
 - shadcn Configuration
 - Package Manifest
-- Root Layout and Theming
+- Follow-ups View and Buttons
+- Lead Form Dialog
 - Queue and Call Logging Design
-- Leads Table and Filters
-- Prototype Interactions
 - Runtime Dependencies
-- UI Primitives
-- Time Zones and Form Options
 - TypeScript Config
-- Dev Dependencies
-- Lead Data Functions
 - Modules and Data Model
+- Dev Dependencies
 - CSV Import Plan
-- Leads Page
-- Dialogs and Shortcuts Help
-- Outcomes and Chips
+- Setup and Database Driver
+- Root Layout and Theming
+- Form Primitives
 - npm Scripts
-- Command Menu
-- Call Window Math
-- Lead Form Validation
-- Setup and Deployment
-- Testing Strategy
-- Queue Helpers and Formatting
-- Database Driver and logCall
+- Call Logging and Test Database
+- Project Documents
+- Testing Strategy and Scaffold
 - Stats Plan
-- Lead Actions
-- Sidebar Navigation
-- Phone Utilities
-- E2E Database Server
+- Leads and Lists Scope
+- Deploy Plan
 - ESLint Config
 - Prettier Config
-- Not Planned Features
 - Shape and Spacing Tokens
 - Auth Route Handlers
 
 ## God Nodes (most connected - your core abstractions)
-1. `react` - 30 edges
-2. `next` - 30 edges
+1. `react` - 32 edges
+2. `next` - 31 edges
 3. `Tasks: Cold-Call CRM` - 25 edges
-4. `Spec: core-crm (Cold-Call CRM)` - 24 edges
-5. `QueueView()` - 23 edges
-6. `getDb()` - 22 edges
-7. `cn` - 21 edges
-8. `vitest` - 20 edges
-9. `Queue + call logging task (slice 5, done)` - 20 edges
-10. `Button()` - 19 edges
+4. `Spec: core-crm (Cold-Call CRM)` - 23 edges
+5. `vitest` - 22 edges
+6. `cn` - 22 edges
+7. `Queue + call logging task (slice 5, done)` - 21 edges
+8. `Button()` - 20 edges
+9. `lucide-react` - 20 edges
+10. `getDb()` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `nextStatus()` --semantically_similar_to--> `src/lib/outcomes.ts (outcome -> status transitions)`  [INFERRED] [semantically similar]
   design/prototype.html → SPEC-core-crm.md
+- `Mutation checking of tests (drop a rule, expect a failing test)` --semantically_similar_to--> `Prove-It bug-fix rule (failing test first)`  [INFERRED] [semantically similar]
+  tasks/todo.md → SPEC-core-crm.md
+- `recordCall (call insert + lead update in one transaction)` --references--> `recordCall()`  [INFERRED]
+  SPEC-core-crm.md → src/lib/data/calls.ts
+- `logCall server action` --references--> `getDb()`  [INFERRED]
+  SPEC-core-crm.md → src/lib/db/client.ts
 - `parsePhone()` --implements--> `E.164 phone normalization and dedupe`  [INFERRED]
   src/lib/phone.ts → SPEC-core-crm.md
-- `calls` --implements--> `calls table`  [INFERRED]
-  src/lib/db/schema.ts → SPEC-core-crm.md
-- `leads` --implements--> `leads table`  [INFERRED]
-  src/lib/db/schema.ts → SPEC-core-crm.md
-- `lists` --implements--> `lists table`  [INFERRED]
-  src/lib/db/schema.ts → SPEC-core-crm.md
 
 ## Import Cycles
 - None detected.
@@ -89,175 +80,143 @@
 - **Owner's Google sign-in setup flow** — docs_setup_google_auth_platform, docs_setup_google_oauth_client, docs_setup_env_local, docs_setup_allowed_email, spec_core_crm_authjs [INFERRED 0.85]
 - **logCall write path (session check, Zod validation, atomic call + lead update)** — spec_core_crm_logcall, spec_core_crm_requireuser, spec_core_crm_zod, spec_core_crm_recordcall, spec_core_crm_db_transaction, spec_core_crm_calls_table, spec_core_crm_leads_table [EXTRACTED 1.00]
 - **Queue eligibility and ordering rules** — spec_core_crm_call_queue, spec_core_crm_queue_query_module, spec_core_crm_call_window, spec_core_crm_per_zone_call_hours, spec_core_crm_retry_gap, spec_core_crm_follow_ups, spec_core_crm_closed_out_statuses, spec_core_crm_call_lists [EXTRACTED 1.00]
-- **Slice 5 queue + call logging delivery files** — tasks_todo_queue_call_logging_slice_5, src_lib_queue, src_lib_data_queue, src_lib_data_calls, src_lib_actions_calls, src_app_app_queue_page, src_components_queue_queue_view [EXTRACTED 1.00]
+- **Follow-ups due-today flow (server sends 8 days, browser groups on the user's clock)** — spec_core_crm_follow_ups, spec_core_crm_follow_ups_browser_grouping, src_lib_data_follow_ups, src_lib_follow_ups, src_components_follow_ups_view, src_components_app_shell_nav_counts, tasks_todo_sidebar_nav_counts [INFERRED 0.85]
 
-## Communities (45 total, 3 thin omitted)
+## Communities (36 total, 2 thin omitted)
 
-### Community 0 - "Data Layer and Integration Tests"
+### Community 0 - "Leads and Lists Pages"
 Cohesion: 0.05
-Nodes (75): drizzle-orm, vitest, settings table (single row, id = 1), Header(), metadata, Page(), param(), Queue() (+67 more)
+Nodes (70): nextConfig, next, server-only, FollowUps(), metadata, Page(), metadata, Page() (+62 more)
 
-### Community 1 - "Google Sign-in and Session"
+### Community 1 - "Data Layer and Integration Tests"
+Cohesion: 0.06
+Nodes (61): drizzle-orm, vitest, settings table (single row, id = 1), callsSince(), RecordCallInput, RecordCallResult, UndoCallResult, FollowUpItem (+53 more)
+
+### Community 2 - "Queue Page and Outcomes"
+Cohesion: 0.06
+Nodes (54): STATUS map (labels and tones), Semantic tones (neutral, info, ok, accent, warn, danger), Call outcome enum, src/lib/outcomes.ts (outcome -> status transitions), Lead status enum, DOT, FollowUpPick, GROUPS (+46 more)
+
+### Community 3 - "Google Sign-in and Session"
+Cohesion: 0.08
+Nodes (37): generate-agent-files.js (next dev), :root CSS custom properties (light/dark theme tokens), Semantic color tokens mapped to shadcn CSS variables, Typography (Geist / Geist Mono, 12-26px scale), next-auth, Google sign-in locked to one allowed email, src/auth.ts (Auth.js config + single-email allowlist), Auth.js v5 (Google provider, JWT sessions) (+29 more)
+
+### Community 4 - "App Shell and Navigation"
 Cohesion: 0.07
-Nodes (40): generate-agent-files.js (next dev), :root CSS custom properties (light/dark theme tokens), Semantic color tokens mapped to shadcn CSS variables, Typography (Geist / Geist Mono, 12-26px scale), next-auth, server-only, Google sign-in locked to one allowed email, src/auth.ts (Auth.js config + single-email allowlist) (+32 more)
+Nodes (28): AppLayout(), AppShell(), navCountsByHref, ShellContext, ShellContextValue, useShell(), ShortcutsDialog(), CurrentNavLinks() (+20 more)
 
-### Community 2 - "Page Layout and Lists Page"
-Cohesion: 0.12
-Nodes (26): nextConfig, next, metadata, Page(), metadata, Page(), Lists(), metadata (+18 more)
+### Community 5 - "Lead Input, Phones, Time Zones"
+Cohesion: 0.08
+Nodes (34): countriesAndZones(), ZoneChoice, LEAD_FIELDS, LeadErrors, LeadField, LeadForm, LeadFormResult, LeadValues (+26 more)
 
-### Community 3 - "E2E Test Setup"
-Cohesion: 0.12
+### Community 6 - "E2E Test Setup"
+Cohesion: 0.11
 Nodes (22): open(), E2E_AUTH_SECRET, E2E_OWNER_EMAIL, E2E_SERVER_ENV, E2E_STRANGER_EMAIL, OWNER_STATE, sessionState(), STRANGER_STATE (+14 more)
 
-### Community 4 - "Queue Page and Call Actions"
-Cohesion: 0.12
-Nodes (29): useShell(), DOT, FollowUpPick, GROUPS, LogPanel(), ownZone(), PRESSED, QueueLeadCard() (+21 more)
+### Community 7 - "Queue Query and Call Hours"
+Cohesion: 0.11
+Nodes (34): Header(), metadata, Page(), param(), Queue(), QueueSkeleton(), SearchParams, QueueCard (+26 more)
 
-### Community 5 - "Prototype Domain Model"
-Cohesion: 0.10
-Nodes (23): bindImport(), inWindow(), loadImport(), nextWindowOpen(), OUTCOMES table (keys 1-9, tones, followUp flag), queueState(), renderView(), settings object (call window, retry gap, default country) (+15 more)
+### Community 8 - "Prototype Interactions"
+Cohesion: 0.09
+Nodes (27): bindImport(), bindQueue(), confirmLog(), CONVERSATION outcome set (connect rate), copyPhone(), counts(), cycleTheme(), doUndo() (+19 more)
 
-### Community 6 - "Lead Form Dialog"
-Cohesion: 0.13
-Nodes (19): AddLeadButton(), EditLeadButton(), FIELD_ORDER, FormLead, INITIAL, LeadForm(), LeadFormDialog(), Props (+11 more)
+### Community 9 - "Lead Display and Live Times"
+Cohesion: 0.16
+Nodes (26): DetailSkeleton(), LeadDetail(), metadata, None(), Page(), Chip(), OutcomeChip(), StatusChip() (+18 more)
 
-### Community 7 - "Lead Display and Live Times"
-Cohesion: 0.18
-Nodes (21): DetailSkeleton(), LeadDetail(), metadata, None(), Page(), Chip(), OutcomeChip(), StatusChip() (+13 more)
+### Community 10 - "Command Menu and Dialogs"
+Cohesion: 0.15
+Nodes (22): CommandMenu(), Props, SECTIONS, Command(), CommandDialog(), CommandEmpty(), CommandGroup(), CommandInput() (+14 more)
 
-### Community 8 - "App Shell and Hotkeys"
-Cohesion: 0.14
-Nodes (13): AppLayout(), AppShell(), onKeyDown(), ShellContext, ShellContextValue, Sheet(), SheetContent(), SheetOverlay() (+5 more)
+### Community 11 - "Follow-ups and Sidebar Counts"
+Cohesion: 0.17
+Nodes (17): Follow-ups and Due today list, DueCount(), NavCount(), FollowUpsCount(), getCounts, LeadsCount(), QueueCount(), Boundaries (+9 more)
 
-### Community 9 - "Project Documents"
-Cohesion: 0.19
-Nodes (18): Capability Map: Cold-Call CRM, Cold-Call CRM Prototype (prototype.html), Design tokens: Cold-Call CRM, CRM Tool README, npm scripts (dev, check, test:e2e, format), zod, Spec: core-crm (Cold-Call CRM), Call lists / campaigns (+10 more)
-
-### Community 10 - "shadcn Configuration"
+### Community 12 - "shadcn Configuration"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
-### Community 11 - "Package Manifest"
+### Community 13 - "Package Manifest"
 Cohesion: 0.09
 Nodes (20): engines, node, name, private, version, cmdk, drizzle-kit, jsdom (+12 more)
 
-### Community 12 - "Root Layout and Theming"
-Cohesion: 0.13
-Nodes (13): next-themes, geistMono, geistSans, metadata, RootLayout(), ICONS, LABELS, ORDER (+5 more)
-
-### Community 13 - "Queue and Call Logging Design"
-Cohesion: 0.19
-Nodes (15): viewPrefs() (Settings screen), core-crm acceptance criteria, Call queue (Next lead), Local call window (default 09:00-18:00 Mon-Fri), src/lib/outcomes.ts (outcome -> status transitions), src/lib/queue.ts (browser queue helpers: order after skips, reasons, follow-up times), src/lib/data/queue.ts (queue query: eligibility, order, counts), Quick call logging (one-click outcome + note) (+7 more)
-
-### Community 14 - "Leads Table and Filters"
+### Community 14 - "Follow-ups View and Buttons"
 Cohesion: 0.16
-Nodes (13): lucide-react, LeadTableRow, Props, Kbd(), NativeSelect(), NativeSelectOption(), NativeSelectProps, LeadStatus (+5 more)
+Nodes (15): class-variance-authority, cn, dayAndTime, timeOnly, Button(), buttonVariants, InputGroupAddon(), inputGroupAddonVariants (+7 more)
 
-### Community 15 - "Prototype Interactions"
-Cohesion: 0.18
-Nodes (16): bindQueue(), confirmLog(), copyPhone(), counts(), cycleTheme(), doUndo(), Global keydown shortcut handler, logCall() (prototype, with undo snapshot) (+8 more)
+### Community 15 - "Lead Form Dialog"
+Cohesion: 0.15
+Nodes (17): lucide-react, AddLeadButton(), DialogState, EditLeadButton(), LeadDialogShortcut(), FIELD_ORDER, FormLead, INITIAL (+9 more)
 
-### Community 16 - "Runtime Dependencies"
+### Community 16 - "Queue and Call Logging Design"
+Cohesion: 0.17
+Nodes (16): inWindow(), queueState(), settings object (call window, retry gap, default country), TERMINAL status set, viewLists(), core-crm acceptance criteria, Call queue (Next lead), Local call window (default 09:00-18:00 Mon-Fri) (+8 more)
+
+### Community 17 - "Runtime Dependencies"
 Cohesion: 0.11
 Nodes (19): dependencies, class-variance-authority, cmdk, cn, drizzle-orm, libphonenumber-js, lucide-react, next (+11 more)
 
-### Community 17 - "UI Primitives"
-Cohesion: 0.22
-Nodes (12): class-variance-authority, cn, radix-ui, react, Button(), buttonVariants, InputGroupButton(), inputGroupButtonVariants (+4 more)
-
-### Community 18 - "Time Zones and Form Options"
-Cohesion: 0.20
-Nodes (15): allLists(), countriesAndZones(), getLeadFormOptions(), ZoneChoice, CountryOption, countryTimeZones(), CURRENT_NAMES, currentName() (+7 more)
-
-### Community 19 - "TypeScript Config"
+### Community 18 - "TypeScript Config"
 Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
+
+### Community 19 - "Modules and Data Model"
+Cohesion: 0.20
+Nodes (15): core-crm module, deals table (lead_id -> leads), dialer module, email-calendar module, Google token storage and refresh, Not planned features (SMS, automation, funnels, multi-user, white-label, AI notes), pipeline module, Twilio calling provider (+7 more)
 
 ### Community 20 - "Dev Dependencies"
 Cohesion: 0.11
 Nodes (18): devDependencies, drizzle-kit, @electric-sql/pglite, @electric-sql/pglite-socket, eslint, eslint-config-next, jsdom, @playwright/test (+10 more)
 
-### Community 21 - "Lead Data Functions"
+### Community 21 - "CSV Import Plan"
+Cohesion: 0.22
+Nodes (16): COUNTRIES (dial codes, single-zone time zones), countryOf(), importPlan(), normPhone(), openLeadForm(), prettyPhone(), libphonenumber-js, CSV import/export (column mapping, phone dedupe) (+8 more)
+
+### Community 22 - "Setup and Database Driver"
+Cohesion: 0.19
+Nodes (16): Setting up CRM Tool on your machine, ALLOWED_EMAIL single-account allowlist, npm run db:migrate (create the tables), .env.local secrets (AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, ALLOWED_EMAIL, AUTH_SECRET, DATABASE_URL), Google Auth Platform consent screen (External audience, Testing mode, test users), Google OAuth web client (localhost:3000 origin and /api/auth/callback/google), Neon project with pooled connection string, Setup troubleshooting table (+8 more)
+
+### Community 23 - "Root Layout and Theming"
 Cohesion: 0.17
-Nodes (16): escapeLike(), filterCondition(), getLead(), isUuid(), LeadDetail, LeadFilters, LeadPage, LeadRow (+8 more)
+Nodes (9): next-themes, sonner, geistMono, geistSans, metadata, RootLayout(), ThemeProvider(), Toaster() (+1 more)
 
-### Community 22 - "Modules and Data Model"
-Cohesion: 0.22
-Nodes (13): core-crm module, deals table (lead_id -> leads), dialer module, email-calendar module, Google token storage and refresh, pipeline module, Twilio calling provider, calls table (+5 more)
+### Community 24 - "Form Primitives"
+Cohesion: 0.19
+Nodes (8): radix-ui, react, Field(), FieldLabel(), FieldSeparator(), fieldVariants, Label(), Separator()
 
-### Community 23 - "CSV Import Plan"
-Cohesion: 0.24
-Nodes (15): COUNTRIES (dial codes, single-zone time zones), countryOf(), importPlan(), normPhone(), openLeadForm(), prettyPhone(), libphonenumber-js, CSV import/export (column mapping, phone dedupe) (+7 more)
-
-### Community 24 - "Leads Page"
-Cohesion: 0.21
-Nodes (13): AddLead(), Leads(), LeadsSkeleton(), metadata, Page(), SearchParams, DialogState, LeadDialogShortcut() (+5 more)
-
-### Community 25 - "Dialogs and Shortcuts Help"
-Cohesion: 0.22
-Nodes (12): SECTIONS, ShortcutsDialog(), CommandDialog(), Dialog(), DialogContent(), DialogDescription(), DialogFooter(), DialogHeader() (+4 more)
-
-### Community 26 - "Outcomes and Chips"
-Cohesion: 0.21
-Nodes (13): TONES, recordCall(), CallOutcome, CLOSED_STATUSES, FOLLOW_UP_OUTCOMES, needsFollowUp(), nextStatus(), OUTCOME_META (+5 more)
-
-### Community 27 - "npm Scripts"
+### Community 25 - "npm Scripts"
 Cohesion: 0.13
 Nodes (15): scripts, build, check, db:generate, db:migrate, db:studio, dev, format (+7 more)
 
-### Community 28 - "Command Menu"
-Cohesion: 0.29
-Nodes (12): CommandMenu(), Props, Command(), CommandEmpty(), CommandGroup(), CommandInput(), CommandItem(), CommandList() (+4 more)
+### Community 26 - "Call Logging and Test Database"
+Cohesion: 0.20
+Nodes (8): port, server, stop(), @electric-sql/pglite, @electric-sql/pglite-socket, logCall server action, PGlite (in-memory Postgres for integration tests), recordCall (call insert + lead update in one transaction)
 
-### Community 29 - "Call Window Math"
-Cohesion: 0.27
-Nodes (13): calendars, clocks, isInCallWindow(), localClock(), LocalDate, nextWindowOpen(), offsetAt(), parseClock() (+5 more)
-
-### Community 30 - "Lead Form Validation"
-Cohesion: 0.19
-Nodes (11): LEAD_FIELDS, LeadErrors, LeadField, LeadForm, LeadFormResult, LeadValues, ListNameResult, optional() (+3 more)
-
-### Community 31 - "Setup and Deployment"
+### Community 27 - "Project Documents"
 Cohesion: 0.28
-Nodes (12): Setting up CRM Tool on your machine, ALLOWED_EMAIL single-account allowlist, .env.local secrets (AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, ALLOWED_EMAIL, AUTH_SECRET, DATABASE_URL), Google Auth Platform consent screen (External audience, Testing mode, test users), Google OAuth web client (localhost:3000 origin and /api/auth/callback/google), Setup troubleshooting table, Success criteria (queue < 300 ms at 10k leads, Lighthouse >= 90), Vercel hosting (+4 more)
+Nodes (12): Capability Map: Cold-Call CRM, viewPrefs() (Settings screen), CRM Tool README, npm scripts (dev, check, test:e2e, format), Spec: core-crm (Cold-Call CRM), Objective: single-user hosted cold-calling app, Quick call logging (one-click outcome + note), Settings feature (call window, retry gap, default country) (+4 more)
 
-### Community 32 - "Testing Strategy"
-Cohesion: 0.24
-Nodes (11): PGlite (in-memory Postgres for integration tests), Playwright, Tailwind CSS + shadcn/ui, Testing strategy (unit, integration, e2e, Prove-It), Vitest, agent-skills usage per stage (TDD, review, security, ship), Owner-supplied secrets (.env.local: DATABASE_URL, AUTH_*, ALLOWED_EMAIL), signIn callback (email_verified && email === ALLOWED_EMAIL) (+3 more)
+### Community 28 - "Testing Strategy and Scaffold"
+Cohesion: 0.28
+Nodes (10): Cold-Call CRM Prototype (prototype.html), Design tokens: Cold-Call CRM, Playwright, Tailwind CSS + shadcn/ui, Testing strategy (unit, integration, e2e, Prove-It), Vitest, agent-skills usage per stage (TDD, review, security, ship), Slice 1: Scaffold (+2 more)
 
-### Community 33 - "Queue Helpers and Formatting"
-Cohesion: 0.21
-Nodes (7): duration(), relativeTime(), arrangeQueue(), FollowUpChoice, ReasonLead, NOW, NOW
+### Community 29 - "Stats Plan"
+Cohesion: 0.31
+Nodes (8): Stats dashboard (calls/day, connect rate, conversion), src/lib/stats.ts (stats queries and aggregation), graphify knowledge-graph workflow (/graphify . and --update), tests/helpers/db.ts PGlite test helper, Slice 2: DB layer, Slice 8: Stats, Run /graphify knowledge graph (done; --update after every slice from slice 3), Stats task (slice 8)
 
-### Community 34 - "Database Driver and logCall"
-Cohesion: 0.24
-Nodes (8): npm run db:migrate (create the tables), Neon project with pooled connection string, pg, Drizzle ORM (drizzle-orm/node-postgres + drizzle-kit), logCall server action, Neon Postgres, recordCall (call insert + lead update in one transaction), LogCall
+### Community 30 - "Leads and Lists Scope"
+Cohesion: 0.36
+Nodes (6): zod, Call lists / campaigns, Leads management feature, Zod validation, Slice 4: Leads and lists, Leads and lists CRUD task (slice 4, done)
 
-### Community 35 - "Stats Plan"
-Cohesion: 0.21
-Nodes (11): CONVERSATION outcome set (connect rate), periodData(), viewStats(), Stats dashboard (calls/day, connect rate, conversion), src/lib/stats.ts (stats queries and aggregation), graphify knowledge-graph workflow (/graphify . and --update), tests/helpers/db.ts PGlite test helper, Slice 2: DB layer (+3 more)
+### Community 31 - "Deploy Plan"
+Cohesion: 0.60
+Nodes (5): Success criteria (queue < 300 ms at 10k leads, Lighthouse >= 90), Vercel hosting, Slice 9: Deploy, Deploy task (slice 9), /ship checklist task
 
-### Community 36 - "Lead Actions"
-Cohesion: 0.30
-Nodes (10): sonner, DeleteLead(), deleteLeadAction(), saveLead(), createLead(), deleteLead(), createDb(), getDb() (+2 more)
-
-### Community 37 - "Sidebar Navigation"
-Cohesion: 0.29
-Nodes (7): CurrentNavLinks(), NavLinks(), SidebarNav(), isActivePath(), NAV_ITEMS, navHrefForKey(), NavItem
-
-### Community 38 - "Phone Utilities"
-Cohesion: 0.38
-Nodes (8): countryName(), countryOptions(), formatPhone(), isCountryCode(), ParsedPhone, parsePhone(), read(), regionNames
-
-### Community 39 - "E2E Database Server"
-Cohesion: 0.33
-Nodes (5): port, server, stop(), @electric-sql/pglite, @electric-sql/pglite-socket
-
-### Community 40 - "ESLint Config"
+### Community 32 - "ESLint Config"
 Cohesion: 0.50
 Nodes (3): eslintConfig, eslint, eslint-config-next
 
-### Community 41 - "Prettier Config"
+### Community 33 - "Prettier Config"
 Cohesion: 0.50
 Nodes (3): plugins, printWidth, tailwindStylesheet
 
@@ -269,22 +228,22 @@ Nodes (3): plugins, printWidth, tailwindStylesheet
 
 ## Knowledge Gaps
 - **21 isolated node(s):** `jsdom`, `prettier`, `prettier-plugin-tailwindcss`, `react-dom`, `shadcn` (+16 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 250 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 264 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `next` connect `Page Layout and Lists Page` to `Data Layer and Integration Tests`, `Google Sign-in and Session`, `Lead Actions`, `Sidebar Navigation`, `Lead Form Dialog`, `Lead Display and Live Times`, `App Shell and Hotkeys`, `Queue Page and Call Actions`, `Package Manifest`, `Root Layout and Theming`, `Leads Table and Filters`, `Leads Page`, `Command Menu`?**
-  _High betweenness centrality (0.129) - this node is a cross-community bridge._
+- **Why does `next` connect `Leads and Lists Pages` to `Queue Page and Outcomes`, `Google Sign-in and Session`, `App Shell and Navigation`, `Queue Query and Call Hours`, `Lead Display and Live Times`, `Command Menu and Dialogs`, `Package Manifest`, `Follow-ups View and Buttons`, `Lead Form Dialog`, `Root Layout and Theming`?**
+  _High betweenness centrality (0.117) - this node is a cross-community bridge._
 - **What connects `jsdom`, `prettier`, `prettier-plugin-tailwindcss` to the rest of the system?**
   _21 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Leads and Lists Pages` be split into smaller, more focused modules?**
+  _Cohesion score 0.05255613951266125 - nodes in this community are weakly interconnected._
+- **Why does `react` connect `Form Primitives` to `Leads and Lists Pages`, `Queue Page and Outcomes`, `Google Sign-in and Session`, `App Shell and Navigation`, `Queue Query and Call Hours`, `Lead Display and Live Times`, `Command Menu and Dialogs`, `Follow-ups and Sidebar Counts`, `Package Manifest`, `Follow-ups View and Buttons`, `Lead Form Dialog`, `Root Layout and Theming`?**
+  _High betweenness centrality (0.081) - this node is a cross-community bridge._
 - **Should `Data Layer and Integration Tests` be split into smaller, more focused modules?**
-  _Cohesion score 0.05133599831685252 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `UI Primitives` to `Data Layer and Integration Tests`, `Google Sign-in and Session`, `Page Layout and Lists Page`, `Lead Actions`, `Sidebar Navigation`, `Lead Form Dialog`, `Lead Display and Live Times`, `App Shell and Hotkeys`, `Queue Page and Call Actions`, `Package Manifest`, `Root Layout and Theming`, `Leads Table and Filters`, `Leads Page`, `Dialogs and Shortcuts Help`, `Command Menu`?**
-  _High betweenness centrality (0.079) - this node is a cross-community bridge._
-- **Should `Google Sign-in and Session` be split into smaller, more focused modules?**
-  _Cohesion score 0.07474600870827286 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05518207282913165 - nodes in this community are weakly interconnected._
 
 ### Low-confidence Hints
 _AMBIGUOUS edges — the extractor was unsure. Verify before acting on these._
