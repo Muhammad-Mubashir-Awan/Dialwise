@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { deleteListAction, type ListFormState, saveList } from "@/lib/actions/lists";
 import type { ListSummary } from "@/lib/data/lists";
+import { queueHref } from "@/lib/queue";
 
 // The header's "New list" button opens the form in the page body.
 const NewListContext = createContext<{ open: boolean; setOpen: (open: boolean) => void }>({
@@ -112,7 +113,8 @@ export function NewListForm() {
   );
 }
 
-export function ListsTable({ lists }: { lists: ListSummary[] }) {
+/** `ready` maps a list id to how many of its leads can be called now. */
+export function ListsTable({ lists, ready }: { lists: ListSummary[]; ready: Record<string, number> }) {
   const { setOpen } = use(NewListContext);
   if (lists.length === 0) {
     return (
@@ -143,7 +145,7 @@ export function ListsTable({ lists }: { lists: ListSummary[] }) {
         </thead>
         <tbody>
           {lists.map((list) => (
-            <ListRow key={list.id} list={list} />
+            <ListRow key={list.id} list={list} ready={ready[list.id] ?? 0} />
           ))}
         </tbody>
       </table>
@@ -151,7 +153,7 @@ export function ListsTable({ lists }: { lists: ListSummary[] }) {
   );
 }
 
-function ListRow({ list }: { list: ListSummary }) {
+function ListRow({ list, ready }: { list: ListSummary; ready: number }) {
   const [mode, setMode] = useState<"view" | "rename" | "delete">("view");
   const [pending, startDelete] = useTransition();
   const rate = list.calls ? Math.round((list.conversations / list.calls) * 100) : 0;
@@ -216,6 +218,17 @@ function ListRow({ list }: { list: ListSummary }) {
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
+            {ready > 0 ? (
+              <Button variant="outline" asChild>
+                <Link href={queueHref(list.id)} aria-label={`Work ${list.name}: ${ready} ready`}>
+                  Work list · {ready}
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" disabled aria-label={`Nobody in ${list.name} to call now`}>
+                Work list
+              </Button>
+            )}
             <Button variant="ghost" onClick={() => setMode("rename")} aria-label={`Rename ${list.name}`}>
               Rename
             </Button>

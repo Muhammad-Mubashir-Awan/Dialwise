@@ -29,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         setShortcutsOpen(true);
       },
       closeMobileNav: () => setMobileNavOpen(false),
+      isGoPending: () => goSequence.current.pending(),
     }),
     [],
   );

@@ -75,7 +75,8 @@ src/lib/db/           → Drizzle schema and client
 drizzle/              → generated SQL migrations (+ hand-written data migrations)
 src/lib/actions/      → server actions (leads, calls, lists, import)
 src/lib/data/         → database reads and writes; each takes the db, so tests pass PGlite
-src/lib/queue.ts      → next-lead selection logic (pure, unit tested)
+src/lib/queue.ts      → queue helpers for the browser: order after skips, reasons, follow-up times (pure)
+src/lib/data/queue.ts → the queue query (eligibility, order, counts)
 src/lib/csv.ts        → CSV parse/validate/dedupe (pure, unit tested)
 src/lib/stats.ts      → stats queries/aggregation
 src/auth.ts           → Auth.js config + single-email allowlist
@@ -151,6 +152,8 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 - UI: designed first as a clickable HTML prototype (clean and dense, Linear-like, keyboard-first, light and dark), approved before app code.
 - Database driver: node-postgres instead of Neon's HTTP driver (slice 4). It gives real transactions and lets e2e tests run on a local in-memory Postgres. Vercel's `attachDatabasePool` helper was left out for now: it pulls in an old Zod with a known advisory; revisit at deploy (slice 9).
 - A lead's status changes only through logged calls; the lead form edits contact details, list, tags, time zone and notes (slice 4, as in the prototype).
+- Queue call hours are checked in the app for each distinct time zone in use (the same code as the leads table), and the query then keeps leads in open zones, so it doesn't depend on the database's time zone data (slice 5).
+- Undo removes the lead's latest call and restores its status and times, within 15 minutes of logging (slice 5).
 - Time zones per country come from the server's built-in ICU data. A lead's zone is guessed when its country keeps one time (or has one main zone, e.g. Spain → Madrid); otherwise it stays unknown until picked in the form.
 
 ## Open Questions

@@ -33,8 +33,9 @@ export default defineConfig({
     {
       command: `npx next start -p ${PORT}`,
       url: `http://localhost:${PORT}/login`,
-      // Set here, DATABASE_URL wins over any value in .env.local.
-      env: { ...E2E_SERVER_ENV, DATABASE_URL: E2E_DATABASE_URL },
+      // Set here, DATABASE_URL wins over any value in .env.local. One connection: the test database has one
+      // Postgres session, so transactions from parallel requests must not interleave.
+      env: { ...E2E_SERVER_ENV, DATABASE_URL: E2E_DATABASE_URL, DATABASE_POOL_MAX: "1" },
       // Always start fresh: a leftover server can serve an older build than the one just made.
       reuseExistingServer: false,
       timeout: 120_000,

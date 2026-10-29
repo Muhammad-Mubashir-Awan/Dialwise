@@ -53,16 +53,17 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: integration tests on actions; e2e create lead
   - Files: src/lib/lead-input.ts, src/lib/data/, src/lib/actions/leads.ts, src/lib/actions/lists.ts, src/app/(app)/leads/, src/app/(app)/lists/, src/components/leads/, src/components/lists/
   - Result: 162 unit/integration and 48 e2e tests (desktop and phone). Switched the database driver to node-postgres (real transactions; e2e runs on an in-memory PGlite over TCP). Status only changes through logged calls. The lists table's "Work list" and "Export" buttons come with slices 5 and 7.
-- [ ] Task: Outcome transitions (TDD)
+- [x] Task: Outcome transitions (TDD)
   - Acceptance: transition table; attempts never downgrade interested/callback; DNC terminal
   - Verify: unit tests for every outcome × status pair that matters
-  - Files: src/lib/outcomes.ts, tests/outcomes.test.ts
-- [ ] Task: Queue + call logging (slice 5)
+  - Files: src/lib/outcomes.ts, tests/unit/outcomes.test.ts
+- [x] Task: Queue + call logging (slice 5)
   - Acceptance: queue query per SPEC (terminal statuses, retry gap, local call window, ordering, list scope); `logCall` writes the call and the lead update atomically (see "Decide first" below); `/queue` UI with keys 1–9, note, follow-up picker
   - Verify: PGlite tests across time zones; `logCall` atomicity; DNC never served; e2e work-the-queue
   - Decided in slice 4: the app now uses node-postgres, so `logCall` uses `db.transaction` (also works on PGlite in tests).
-  - Watch: the e2e database (pglite-socket) shares one Postgres session across connections, so concurrent transactions can interleave there. If e2e tests start mixing transactions, run the test server with a pool of one connection.
-  - Files: src/lib/queue.ts, src/lib/actions/calls.ts, src/app/queue/
+  - The e2e database (pglite-socket) shares one Postgres session across connections, so the e2e server runs with `DATABASE_POOL_MAX=1`.
+  - Files: src/lib/queue.ts, src/lib/data/queue.ts, src/lib/data/calls.ts, src/lib/actions/calls.ts, src/app/(app)/queue/, src/components/queue/
+  - Result: 227 unit/integration and 61 e2e tests. Call hours are checked in the app per distinct time zone, then the query filters by open zones. Removing the transaction makes the atomicity test fail. Undo works on the latest call within 15 minutes. Keys aren't blocked while a call saves (Next.js queues server actions), so a quick second outcome isn't lost. Added "Call now" on the lead page and "Work list · N" on the lists page.
 - [ ] Task: `/review` on slices 4–5
 - [ ] Task: Follow-ups (slice 6)
   - Acceptance: due today and overdue lists; new call clears/replaces follow-up

@@ -44,7 +44,8 @@ type SeedLead = {
   tags?: string[];
   status?: string;
   country?: string;
-  timezone?: string;
+  /** Defaults to Europe/London; pass null for "unknown", which the queue can always call. */
+  timezone?: string | null;
 };
 
 export async function seedLead(lead: SeedLead): Promise<{ id: string; phoneE164: string }> {
@@ -57,7 +58,7 @@ export async function seedLead(lead: SeedLead): Promise<{ id: string; phoneE164:
       lead.company ?? null,
       phoneE164,
       lead.country ?? "GB",
-      lead.timezone ?? "Europe/London",
+      lead.timezone === undefined ? "Europe/London" : lead.timezone,
       lead.listId ?? null,
       lead.tags ?? [],
       lead.status ?? "new",

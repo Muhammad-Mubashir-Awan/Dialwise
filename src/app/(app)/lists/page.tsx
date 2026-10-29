@@ -4,6 +4,8 @@ import { ListsPageProvider, ListsTable, NewListButton, NewListForm } from "@/com
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listSummaries } from "@/lib/data/lists";
+import { readyCountsByList } from "@/lib/data/queue";
+import { getSettings } from "@/lib/data/settings";
 import { getDb } from "@/lib/db/client";
 import { requireUser } from "@/lib/session";
 
@@ -35,5 +37,8 @@ export default function Page() {
 
 async function Lists() {
   await requireUser();
-  return <ListsTable lists={await listSummaries(getDb())} />;
+  const db = getDb();
+  const now = new Date();
+  const [lists, settings] = await Promise.all([listSummaries(db), getSettings(db)]);
+  return <ListsTable lists={lists} ready={await readyCountsByList(db, { now, settings })} />;
 }

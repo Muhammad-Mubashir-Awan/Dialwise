@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import { OutcomeChip, StatusChip, Tags } from "@/components/chips";
 import { DeleteLead } from "@/components/leads/delete-lead";
 import { EditLeadButton, LeadDialogShortcut } from "@/components/leads/lead-buttons";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { CallWindowChip, DateTime, FollowUpTime, LeadLocalTime, RelativeTime } from "@/components/times";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getLead } from "@/lib/data/leads";
 import { getSettings } from "@/lib/data/settings";
@@ -15,6 +16,7 @@ import { getDb } from "@/lib/db/client";
 import { websiteHref } from "@/lib/lead-input";
 import { getLeadFormOptions } from "@/lib/lead-form-options";
 import { countryName, formatPhone } from "@/lib/phone";
+import { queueHref } from "@/lib/queue";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Lead" };
@@ -61,6 +63,14 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
             notes: lead.notes,
           }}
         />
+        {lead.status !== "do_not_call" && (
+          <Button asChild>
+            <Link href={queueHref(null, lead.id)}>
+              <Phone aria-hidden="true" />
+              Call now
+            </Link>
+          </Button>
+        )}
       </PageHeader>
       <PageBody>
         <Link
