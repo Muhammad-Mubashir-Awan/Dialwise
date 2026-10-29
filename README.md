@@ -1,4 +1,4 @@
-# Cold-Call CRM
+# CRM Tool
 
 A personal CRM for cold calling: a call queue that respects each lead's local call hours, one-key outcome logging, follow-ups, call lists, CSV import/export and stats.
 
