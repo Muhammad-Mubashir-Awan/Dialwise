@@ -43,7 +43,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 - This module keeps calls dialer-ready: `calls.channel`, `calls.duration_sec` and `calls.external_id` exist from the first migration, so `dialer` needs no change to existing data.
 
 ## Tech Stack
-- Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `proxy.ts` for early auth redirects
+- Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `src/proxy.ts` for early auth redirects
 - Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/node-postgres` (a small `pg` pool on Neon's pooled connection string, Neon's recommended setup for Vercel) + drizzle-kit migrations. Writes that must be atomic, such as `logCall`, use `db.transaction`, which works the same on PGlite in tests.
 - Auth.js (NextAuth v5) with Google provider, JWT sessions (no auth tables)
 - Tailwind CSS + shadcn/ui; design tokens from `design/tokens.md`

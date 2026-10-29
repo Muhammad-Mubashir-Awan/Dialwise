@@ -35,7 +35,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [x] Task: Auth (slice 3)
   - Acceptance: Google sign-in; only `ALLOWED_EMAIL` with verified email; `requireUser()` guards every action/page/route; `proxy.ts` early redirect; login page
   - Verify: unit test on signIn callback; e2e unauthenticated redirect
-  - Files: src/auth.ts, src/app/api/auth/[...nextauth]/route.ts, proxy.ts, src/app/login/page.tsx, .env.example
+  - Files: src/auth.ts, src/app/api/auth/[...nextauth]/route.ts, src/proxy.ts, src/app/login/page.tsx, .env.example
 - [x] Task: `/review` on slices 1–3
   - Result: no blockers. Fixed during review: the proxy only reads the session cookie (NextAuth's proxy wrapper re-sends it on every request, which could undo sign-out). Sessions last 30 days from sign-in. Mutation check: dropping the verified-email rule fails a test.
 
