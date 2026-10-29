@@ -1,6 +1,6 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/node-postgres";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { Pool } from "pg";
 import * as schema from "./schema";
 
 function createDb() {
@@ -8,12 +8,14 @@ function createDb() {
   if (!url) {
     throw new Error("DATABASE_URL is not set. Copy .env.example to .env.local and add your Neon connection string.");
   }
-  return drizzle({ client: neon(url), schema });
+  // A small pool: one person uses the app, and Neon's pooled connection string does the heavy pooling.
+  const pool = new Pool({ connectionString: url, max: 3, idleTimeoutMillis: 5_000 });
+  return drizzle({ client: pool, schema });
 }
 
 let db: ReturnType<typeof createDb> | undefined;
 
-/** The app's database (Neon over HTTP). Created on first use, so builds don't need DATABASE_URL. */
+/** The app's database (Postgres over TCP with node-postgres). Created on first use, so builds don't need DATABASE_URL. */
 export function getDb() {
   return (db ??= createDb());
 }
