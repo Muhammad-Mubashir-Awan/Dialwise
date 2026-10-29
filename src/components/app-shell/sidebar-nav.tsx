@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Keyboard, LogOut, Phone, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
+import { signOutAction } from "@/lib/actions/auth";
 import { NAV_ITEMS, isActivePath } from "@/lib/nav";
 import { useShell } from "./shell-context";
 import { ThemeToggle } from "./theme-toggle";
@@ -61,10 +62,12 @@ export function SidebarNav() {
           <Kbd className="ml-auto">?</Kbd>
         </button>
         <ThemeToggle className={itemClass} />
-        <Link href="/login" className={itemClass} onClick={closeMobileNav}>
-          <LogOut aria-hidden="true" className="size-4" />
-          Sign out
-        </Link>
+        <form action={signOutAction}>
+          <button type="submit" className={itemClass}>
+            <LogOut aria-hidden="true" className="size-4" />
+            Sign out
+          </button>
+        </form>
       </div>
     </nav>
   );

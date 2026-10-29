@@ -32,11 +32,12 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: integration test inserts and reads a lead
   - Files: drizzle.config.ts, src/lib/db/schema.ts, src/lib/db/client.ts, tests/helpers/db.ts
 - [x] Task: Run `/graphify .` to build the codebase knowledge graph
-- [ ] Task: Auth (slice 3)
+- [x] Task: Auth (slice 3)
   - Acceptance: Google sign-in; only `ALLOWED_EMAIL` with verified email; `requireUser()` guards every action/page/route; `proxy.ts` early redirect; login page
   - Verify: unit test on signIn callback; e2e unauthenticated redirect
   - Files: src/auth.ts, src/app/api/auth/[...nextauth]/route.ts, proxy.ts, src/app/login/page.tsx, .env.example
-- [ ] Task: `/review` on slices 1–3
+- [x] Task: `/review` on slices 1–3
+  - Result: no blockers. Fixed during review: the proxy only reads the session cookie (NextAuth's proxy wrapper re-sends it on every request, which could undo sign-out). Sessions last 30 days from sign-in. Mutation check: dropping the verified-email rule fails a test.
 
 ### Checkpoint: foundation
 - [ ] Owner has set `.env.local` (Neon, Google OAuth, AUTH_SECRET, ALLOWED_EMAIL) and can sign in locally

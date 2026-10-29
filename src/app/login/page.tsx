@@ -1,12 +1,17 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signInWithGoogle } from "@/lib/actions/auth";
+import { signInErrorMessage } from "@/lib/auth-rules";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-// Google sign-in is wired up in slice 3 (auth); until then the button opens the app.
-export default function LoginPage() {
+type SearchParams = Promise<{ callbackUrl?: string | string[]; error?: string | string[] }>;
+
+const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+export default function LoginPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main className="grid min-h-full place-items-center px-[max(16px,env(safe-area-inset-left))] py-6">
       <div className="flex w-full max-w-sm flex-col gap-4 rounded-lg border bg-card p-7">
@@ -20,10 +25,37 @@ export default function LoginPage() {
         <p className="text-[13px] text-muted-foreground">
           Only the owner&apos;s Google account can sign in. Other accounts are turned away.
         </p>
-        <Button asChild size="lg">
-          <Link href="/queue">Continue with Google</Link>
-        </Button>
+        {/* searchParams are request data: with Cache Components they're read inside a boundary. */}
+        <Suspense fallback={<GoogleButton callbackUrl={undefined} />}>
+          <SignInForm searchParams={searchParams} />
+        </Suspense>
       </div>
     </main>
+  );
+}
+
+async function SignInForm({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const error = signInErrorMessage(first(params.error));
+  return (
+    <>
+      {error && (
+        <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-[13px] text-danger">
+          {error}
+        </p>
+      )}
+      <GoogleButton callbackUrl={first(params.callbackUrl)} />
+    </>
+  );
+}
+
+function GoogleButton({ callbackUrl }: { callbackUrl: string | undefined }) {
+  return (
+    <form action={signInWithGoogle}>
+      {callbackUrl && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
+      <Button type="submit" size="lg" className="w-full">
+        Continue with Google
+      </Button>
+    </form>
   );
 }

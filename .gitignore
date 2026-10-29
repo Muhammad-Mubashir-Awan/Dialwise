@@ -30,3 +30,6 @@ next-env.d.ts
 # graphify: only the report is committed; the graph, cache and working files are rebuilt locally
 graphify-out/*
 !graphify-out/GRAPH_REPORT.md
+
+# e2e sessions minted by e2e/global-setup.ts
+e2e/.auth/
