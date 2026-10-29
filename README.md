@@ -6,6 +6,7 @@ A personal CRM for cold calling: a call queue that respects each lead's local ca
 - Modules and build order (core, then pipeline, dialer, email + calendar): [CAPABILITY-MAP.md](CAPABILITY-MAP.md)
 - Plan and task list: [tasks/plan.md](tasks/plan.md), [tasks/todo.md](tasks/todo.md)
 - Approved UI prototype and design tokens: [design/](design/)
+- First-time setup (Google sign-in, Neon database): [docs/SETUP.md](docs/SETUP.md)
 
 ## Stack
 Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS 4 + shadcn/ui, Neon Postgres + Drizzle (from slice 2), Auth.js with Google (from slice 3), Vitest and Playwright.

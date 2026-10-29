@@ -56,7 +56,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: unit tests for every outcome × status pair that matters
   - Files: src/lib/outcomes.ts, tests/outcomes.test.ts
 - [ ] Task: Queue + call logging (slice 5)
-  - Acceptance: queue query per SPEC (terminal statuses, retry gap, local call window, ordering, list scope); `logCall` via `db.batch`; `/queue` UI with keys 1–9, note, follow-up picker
+  - Acceptance: queue query per SPEC (terminal statuses, retry gap, local call window, ordering, list scope); `logCall` writes the call and the lead update atomically (see "Decide first" below); `/queue` UI with keys 1–9, note, follow-up picker
   - Verify: PGlite tests across time zones; `logCall` atomicity; DNC never served; e2e work-the-queue
   - Decide first: `db.batch` exists on Neon's HTTP driver but not on PGlite. Write `logCall` as one SQL statement (a data-modifying CTE: insert the call and update the lead together), which is atomic on both, or switch the app to Neon's WebSocket driver, which supports transactions.
   - Files: src/lib/queue.ts, src/lib/actions/calls.ts, src/app/queue/

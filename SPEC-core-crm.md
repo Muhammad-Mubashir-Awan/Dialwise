@@ -44,7 +44,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 
 ## Tech Stack
 - Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `proxy.ts` for early auth redirects
-- Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/neon-http` + drizzle-kit migrations. neon-http has no interactive transactions, so atomic multi-statement writes use `db.batch()`.
+- Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/neon-http` + drizzle-kit migrations. neon-http has no interactive transactions and PGlite (tests) has no `db.batch()`, so writes that must be atomic are single SQL statements (e.g. a data-modifying CTE); the exact approach for `logCall` is settled in slice 5.
 - Auth.js (NextAuth v5) with Google provider, JWT sessions (no auth tables)
 - Tailwind CSS + shadcn/ui; design tokens from `design/tokens.md`
 - Zod for validation; Papa Parse for CSV; libphonenumber-js for phone parsing
