@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# env files (secrets)
+.env*
+!.env.example
+
+# testing
+coverage/
+playwright-report/
+test-results/
+
+# misc
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# graphify cache (GRAPH_REPORT.md is committed)
+graphify-out/cache/

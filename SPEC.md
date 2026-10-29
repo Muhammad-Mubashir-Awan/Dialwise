@@ -1,0 +1,139 @@
+# Spec: Cold-Call CRM (personal)
+
+## Objective
+A hosted, single-user web app for managing cold-calling prospects when selling a service/product. It replaces spreadsheets and sticky notes with a fast call workflow.
+
+**User:** one person (the owner), on desktop mostly, usable on phone.
+**Success looks like:** from "next lead" to "outcome logged" in under 10 seconds and 3 clicks, and no follow-up is ever forgotten.
+
+### Features (v1)
+1. **Leads**: create/edit/delete leads (name, company, phone, country, time zone, email, website, notes, source, tags, status). Leads span multiple countries; phones are stored as E.164.
+2. **Call queue**: "Next lead" view that serves the next lead to call.
+   - Priority: due follow-ups, then never-called, then oldest last-call.
+   - Skips leads outside their local call window (default 09:00–18:00, Mon–Fri, configurable).
+   - Skips leads still inside the retry gap (default 24h after `no_answer`/`voicemail`).
+3. **Quick call logging**: log an outcome with one click plus an optional note. Outcomes: `no_answer`, `voicemail`, `gatekeeper`, `callback`, `interested`, `meeting_booked`, `not_interested`, `wrong_number`, `do_not_call`.
+4. **Follow-ups**: `callback` and `interested` outcomes can set a follow-up date/time. A "Due today" list, with overdue items highlighted.
+5. **Call lists**: group leads into named lists/campaigns; the queue can be scoped to one list.
+6. **CSV import/export**: import leads into a list (column mapping, duplicate detection by phone); export leads and call history.
+7. **Stats dashboard**: calls/day, connect rate, conversion (interested + meeting_booked) per list and per period.
+8. **Auth**: Google sign-in via Auth.js, locked to a single allowed email.
+9. **Settings**: call window (hours and days), retry gap, default country for phone parsing.
+
+### Acceptance criteria
+- Logging an outcome updates lead status and `lastCalledAt`, and advances the queue.
+- A `do_not_call` lead never appears in the queue and is skipped on import-duplicates.
+- Follow-up shown in "Due today" at/after its due time, and removed once a new call is logged.
+- Import of a 1,000-row CSV completes with a summary (added / duplicates / invalid).
+- A lead whose local time is outside the call window is not served by the queue; a lead with no known time zone is.
+- A lead called with `no_answer`/`voicemail` does not reappear in the queue until the retry gap has passed.
+- Phone numbers from different countries are normalized to E.164 and deduplicated on that value.
+- Any request without the allowed Google account is rejected (401/redirect), including API routes and server actions.
+
+### Out of scope (v1)
+Dialing/softphone, call recording, email/SMS sending, multi-user/teams, calendar sync, AI features.
+
+## Tech Stack
+- Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `proxy.ts` for early auth redirects
+- Postgres on **Neon**; **Drizzle ORM** via `drizzle-orm/neon-http` + drizzle-kit migrations. neon-http has no interactive transactions, so atomic multi-statement writes use `db.batch()`.
+- Auth.js (NextAuth v5) with Google provider, JWT sessions (no auth tables)
+- Tailwind CSS + shadcn/ui; design tokens from `design/tokens.md`
+- Zod for validation; Papa Parse for CSV; libphonenumber-js for phone parsing
+- Tests: Vitest, PGlite (in-memory Postgres for integration tests), Playwright
+- Hosting: Vercel
+- Versions are pinned at scaffold time after checking current docs via Context7.
+
+## Commands
+```
+Install:   npm install
+Dev:       npm run dev
+Build:     npm run build
+Lint:      npm run lint
+Typecheck: npx tsc --noEmit
+Unit:      npm test            (Vitest)
+Unit cov:  npm test -- --coverage
+E2E:       npx playwright test
+DB gen:    npx drizzle-kit generate
+DB migrate:npx drizzle-kit migrate
+```
+
+## Project Structure
+```
+src/app/              → routes (queue, leads, lists, follow-ups, stats, import, login)
+src/app/api/auth/     → Auth.js handlers
+src/components/       → UI components (shadcn in components/ui)
+src/lib/db/           → Drizzle schema, client, migrations
+src/lib/actions/      → server actions (leads, calls, lists, import)
+src/lib/queue.ts      → next-lead selection logic (pure, unit tested)
+src/lib/csv.ts        → CSV parse/validate/dedupe (pure, unit tested)
+src/lib/stats.ts      → stats queries/aggregation
+src/auth.ts           → Auth.js config + single-email allowlist
+tests/                → unit + integration tests (Vitest)
+e2e/                  → Playwright tests
+docs/                 → notes, ADRs
+SPEC.md               → this file
+```
+
+## Data Model
+- `lists`: id uuid, name, created_at
+- `leads`: id, list_id → lists (nullable), name, company, phone_e164 (unique), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
+  - Indexes: status, list_id, next_follow_up_at, last_called_at, GIN(tags)
+- `calls`: id, lead_id → leads (cascade), outcome, note, follow_up_at, called_at
+- `settings` (single row): call_window_start, call_window_end, call_days, retry_gap_hours, default_country
+- Status: new, contacted, callback, interested, meeting_booked, not_interested, do_not_call, bad_number
+- Outcome: no_answer, voicemail, gatekeeper, callback, interested, meeting_booked, not_interested, wrong_number, do_not_call
+- Outcome → status transitions live in `src/lib/outcomes.ts`. Call attempts never downgrade `interested`/`callback`; `do_not_call` is terminal.
+
+## Code Style
+TypeScript strict, no `any`. Server actions validate input with Zod and check the session first. Pure logic lives in `src/lib` so it can be tested without the framework.
+
+```ts
+// src/lib/actions/calls.ts
+"use server";
+import { z } from "zod";
+import { requireUser } from "@/auth";
+
+const LogCall = z.object({
+  leadId: z.string().uuid(),
+  outcome: z.enum(OUTCOMES),
+  note: z.string().max(2000).optional(),
+  followUpAt: z.coerce.date().optional(),
+});
+
+export async function logCall(input: unknown) {
+  await requireUser();
+  const data = LogCall.parse(input);
+  return db.transaction((tx) => recordCall(tx, data));
+}
+```
+Conventions: files kebab-case, components PascalCase, functions camelCase, DB columns snake_case, named exports, Prettier + ESLint (next/core-web-vitals).
+
+## Testing Strategy
+- **Unit (Vitest):** queue ordering, CSV parsing/dedupe, phone normalization, stats aggregation, outcome → status transitions. Target ≥ 90% on `src/lib` pure modules.
+- **Integration (Vitest + test Postgres):** server actions against a real test DB (log call, import, do-not-call rules).
+- **E2E (Playwright):** the core loop: sign in (mocked auth), import CSV, work queue, log outcomes, see follow-up due, view stats.
+- Bug fixes follow Prove-It: failing test first.
+
+## Boundaries
+- **Always:** validate input with Zod; check the session in every action/route; run lint, typecheck and tests before committing; keep migrations in version control; normalize phone numbers on write.
+- **Ask first:** schema changes after first migration, adding dependencies, changing auth config, anything touching the production database, changing hosting.
+- **Never:** commit secrets or `.env`; store the real lead data in the repo or test fixtures; skip auth on any route; delete/disable failing tests without approval; add features outside v1 scope.
+
+**Legal note (not code):** cold calling is regulated, and the rules differ per country (do-not-call registries, calling-hour limits, e.g. TCPA in the US, PECR/TPS in the UK). The app records `do_not_call` and enforces a call window, but compliance with each country's rules is up to you.
+
+## Success Criteria
+- All v1 acceptance criteria above pass in automated tests.
+- Lint, typecheck, unit/integration and e2e pass in CI.
+- Deployed on Vercel; unauthorized Google accounts cannot read any data.
+- Queue "next lead" responds in < 300 ms with 10k leads.
+- Lighthouse performance ≥ 90 on the queue page (mobile).
+
+## Decisions (resolved questions)
+- Region: multiple countries → E.164 + country per lead.
+- Database: Neon. ORM: Drizzle.
+- Tags on leads: yes (v1). Custom fields: no.
+- Per-lead time zone and call window: yes (v1).
+- UI: designed first as a clickable HTML prototype (clean and dense, Linear-like, keyboard-first, light and dark), approved before app code.
+
+## Open Questions
+None for v1.
