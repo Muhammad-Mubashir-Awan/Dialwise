@@ -15,7 +15,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
    - Skips leads outside their local call window (default 09:00–18:00, Mon–Fri, configurable).
    - Skips leads still inside the retry gap (default 24h after `no_answer`/`voicemail`).
 3. **Quick call logging**: log an outcome with one click plus an optional note. Outcomes: `no_answer`, `voicemail`, `gatekeeper`, `callback`, `interested`, `meeting_booked`, `not_interested`, `wrong_number`, `do_not_call`.
-4. **Follow-ups**: `callback` and `interested` outcomes can set a follow-up date/time. A "Due today" list, with overdue items highlighted.
+4. **Follow-ups**: `callback` and `interested` outcomes set a follow-up date/time; `meeting_booked` sets the meeting time the same way. Times are picked in the lead's time zone and shown in yours too. A "Due today" list, with overdue items highlighted.
 5. **Call lists**: group leads into named lists/campaigns; the queue can be scoped to one list.
 6. **CSV import/export**: import leads into a list (column mapping, duplicate detection by phone); export leads and call history.
 7. **Stats dashboard**: calls/day, connect rate, conversion (interested + meeting_booked) per list and per period.
@@ -25,6 +25,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 ### Acceptance criteria
 - Logging an outcome updates lead status and `lastCalledAt`, and advances the queue.
 - A `do_not_call` lead never appears in the queue and is skipped on import-duplicates.
+- Leads that are closed out never appear in the queue: `meeting_booked`, `not_interested`, `do_not_call`, `bad_number`. A booked meeting still shows in Follow-ups at its meeting time.
 - Follow-up shown in "Due today" at/after its due time, and removed once a new call is logged.
 - Import of a 1,000-row CSV completes with a summary (added / duplicates / invalid).
 - A lead whose local time is outside the call window is not served by the queue; a lead with no known time zone is.
@@ -94,7 +95,7 @@ tasks/                → plan.md and todo.md
 - `settings` (single row, id = 1, seeded by migration): call_window_start (09:00), call_window_end (18:00, must be after start), call_days (0 = Sun … 6 = Sat; default Mon–Fri), retry_gap_hours (1–168, default 24), default_country (default GB)
 - Status: new, contacted, callback, interested, meeting_booked, not_interested, do_not_call, bad_number
 - Outcome: no_answer, voicemail, gatekeeper, callback, interested, meeting_booked, not_interested, wrong_number, do_not_call
-- Outcome → status transitions live in `src/lib/outcomes.ts`. Call attempts never downgrade `interested`/`callback`; `do_not_call` is terminal.
+- Outcome → status transitions live in `src/lib/outcomes.ts`. Call attempts (`no_answer`, `voicemail`, `gatekeeper`) never downgrade a lead past `contacted`, and `callback` doesn't downgrade `interested`. Closed-out statuses (`meeting_booked`, `not_interested`, `do_not_call`, `bad_number`) leave the queue; `do_not_call` is permanent.
 
 ## Code Style
 TypeScript strict, no `any`. Server actions validate input with Zod and check the session first. Pure logic lives in `src/lib` so it can be tested without the framework.
@@ -115,7 +116,9 @@ const LogCall = z.object({
 export async function logCall(input: unknown) {
   await requireUser();
   const data = LogCall.parse(input);
-  return db.transaction((tx) => recordCall(tx, data));
+  // Neon's HTTP driver has no transactions: recordCall writes the call and the lead
+  // update in one SQL statement, which is atomic (decided in slice 5).
+  return recordCall(getDb(), data);
 }
 ```
 Conventions: files kebab-case, components PascalCase, functions camelCase, DB columns snake_case, named exports, Prettier + ESLint (next/core-web-vitals).

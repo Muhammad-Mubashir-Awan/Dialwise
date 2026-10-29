@@ -13,11 +13,11 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Files: CAPABILITY-MAP.md
 
 ## Phase 1: UI design (gate: owner approval)
-- [ ] Task: Design system
+- [x] Task: Design system
   - Acceptance: palette (neutral + one accent, light/dark), type scale, spacing, density, status/outcome colors, focus states; mapped to shadcn CSS variables
   - Verify: contrast ≥ 4.5:1 for text in both themes
   - Files: design/tokens.md
-- [ ] Task: Clickable prototype of all screens
+- [x] Task: Clickable prototype of all screens
   - Acceptance: login, queue, leads, lead detail, lists, follow-ups, import, stats, settings; keyboard hints visible; works at 375px wide
   - Verify: published Artifact reviewed and approved by owner
   - Files: design/prototype.html
@@ -31,7 +31,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Acceptance: schema per SPEC (including dialer-ready `calls.channel`, `calls.duration_sec`, `calls.external_id`), first migration generated, PGlite test helper
   - Verify: integration test inserts and reads a lead
   - Files: drizzle.config.ts, src/lib/db/schema.ts, src/lib/db/client.ts, tests/helpers/db.ts
-- [ ] Task: Run `/graphify .` to build the codebase knowledge graph
+- [x] Task: Run `/graphify .` to build the codebase knowledge graph
 - [ ] Task: Auth (slice 3)
   - Acceptance: Google sign-in; only `ALLOWED_EMAIL` with verified email; `requireUser()` guards every action/page/route; `proxy.ts` early redirect; login page
   - Verify: unit test on signIn callback; e2e unauthenticated redirect
