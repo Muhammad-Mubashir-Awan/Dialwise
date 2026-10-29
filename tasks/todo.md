@@ -66,10 +66,11 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Result: 227 unit/integration and 61 e2e tests. Call hours are checked in the app per distinct time zone, then the query filters by open zones. Removing the transaction makes the atomicity test fail. Undo works on the latest call within 15 minutes. Keys aren't blocked while a call saves (Next.js queues server actions), so a quick second outcome isn't lost. Added "Call now" on the lead page and "Work list · N" on the lists page.
 - [x] Task: `/review` on slices 4–5
   - Result: no blockers. Fixed: a lead whose call was still saving could come back on screen when an earlier call's data arrived, risking a double log. React's current batching of overlapping transitions hides it, but React calls that a limitation it may remove, so leads now stay hidden until their own call saves (new e2e test). Added the missing signed-out test for deleting a list. Shared `isUuid` and `callWindowOf` helpers. Mutation check: 11 of 11 rules caught once the missing test was added.
-- [ ] Task: Follow-ups (slice 6)
+- [x] Task: Follow-ups (slice 6)
   - Acceptance: due today and overdue lists; new call clears/replaces follow-up
   - Verify: integration test; e2e follow-up appears in Due Today
-  - Files: src/app/follow-ups/
+  - Files: src/lib/follow-ups.ts, src/lib/data/follow-ups.ts, src/app/(app)/follow-ups/, src/components/follow-ups-view.tsx, src/components/app-shell/nav-counts.tsx
+  - Result: Overdue, Due today and Next 7 days, grouped on your own clock in the browser (the server sends the next 8 days). Do not call, not interested and bad number leads are left out; booked meetings show as Meeting with Open. Sidebar counts for Queue (ready now), Follow-ups (due today, red when overdue) and Leads. 240 unit/integration and 67 e2e tests.
 - [ ] Task: CSV import/export (slice 7)
   - Acceptance: column mapping, validation, dedupe on E.164, DNC skip, 500-row chunks, summary; `/api/export` streams CSV
   - From the slice 4–5 review: validate imported time zones with `resolveTimeZone`. An unknown zone name in the database would break the local-time display (Intl throws on it).

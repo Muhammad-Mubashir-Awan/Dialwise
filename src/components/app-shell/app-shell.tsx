@@ -9,9 +9,9 @@ import { navHrefForKey } from "@/lib/nav";
 import { CommandMenu } from "./command-menu";
 import { ShellContext } from "./shell-context";
 import { ShortcutsDialog } from "./shortcuts-dialog";
-import { SidebarNav } from "./sidebar-nav";
+import { type NavCounts, SidebarNav } from "./sidebar-nav";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, navCounts }: { children: React.ReactNode; navCounts?: NavCounts }) {
   const router = useRouter();
   const [commandOpen, setCommandOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <ShellContext.Provider value={shell}>
       <div className="grid h-dvh grid-cols-1 md:grid-cols-[224px_minmax(0,1fr)]">
         <aside className="hidden overflow-y-auto border-r bg-sidebar md:block">
-          <SidebarNav />
+          <SidebarNav counts={navCounts} />
         </aside>
         <div className="flex min-h-0 min-w-0 flex-col">
           <button
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" className="w-[min(280px,85vw)] bg-sidebar p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarNav />
+          <SidebarNav counts={navCounts} />
         </SheetContent>
       </Sheet>
       <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} onShowShortcuts={() => setShortcutsOpen(true)} />

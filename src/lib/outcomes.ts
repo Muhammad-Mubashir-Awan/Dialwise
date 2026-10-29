@@ -76,3 +76,6 @@ export function nextStatus(current: LeadStatus, outcome: CallOutcome): LeadStatu
       return outcome;
   }
 }
+
+/** Statuses whose follow-ups no longer count: the lead said no, asked not to be called, or the number is wrong. */
+export const NO_FOLLOW_UP_STATUSES: LeadStatus[] = ["do_not_call", "not_interested", "bad_number"];

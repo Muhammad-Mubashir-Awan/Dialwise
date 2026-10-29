@@ -226,3 +226,21 @@ export async function readyCountsByList(
     .groupBy(leads.listId);
   return Object.fromEntries(rows.map((r) => [r.listId, r.ready]));
 }
+
+/** For the sidebar: leads ready to call now (any list) and all leads. */
+export async function navCounts(
+  db: AppDatabase,
+  { now, settings }: { now: Date; settings: Settings },
+): Promise<{ ready: number; leads: number }> {
+  const closedZones = await zonesNow(db, now, callWindowOf(settings));
+  const parts = queueParts(db, now, settings, closedZones);
+  const [[ready], [all]] = await Promise.all([
+    db
+      .select({ n: count() })
+      .from(leads)
+      .leftJoinLateral(parts.lastCall, sql`true`)
+      .where(and(parts.open, parts.ready)),
+    db.select({ n: count() }).from(leads),
+  ]);
+  return { ready: ready.n, leads: all.n };
+}

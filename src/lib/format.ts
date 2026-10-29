@@ -2,7 +2,8 @@
 
 const MINUTE = 60_000;
 
-function duration(ms: number): string {
+/** "45m", "2h 30m", "3 days" for a length of time, ignoring its sign. */
+export function duration(ms: number): string {
   const minutes = Math.round(Math.abs(ms) / MINUTE);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);

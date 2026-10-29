@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { relativeTime } from "@/lib/format";
+import { duration, relativeTime } from "@/lib/format";
 
 const NOW = new Date("2026-10-29T12:00:00Z");
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
@@ -22,5 +22,13 @@ describe("relativeTime", () => {
     expect(relativeTime(at(45), NOW)).toBe("in 45m");
     expect(relativeTime(at(3 * 60), NOW)).toBe("in 3h");
     expect(relativeTime(at(46 * 60), NOW)).toBe("in 2 days");
+  });
+});
+
+describe("duration", () => {
+  it("is the same short form relativeTime uses, without direction", () => {
+    expect(duration(45 * 60_000)).toBe("45m");
+    expect(duration(-150 * 60_000)).toBe("2h 30m");
+    expect(duration(3 * 24 * 3_600_000)).toBe("3 days");
   });
 });

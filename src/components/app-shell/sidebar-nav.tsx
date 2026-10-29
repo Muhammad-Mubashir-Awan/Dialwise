@@ -14,7 +14,10 @@ import { ThemeToggle } from "./theme-toggle";
 const itemClass =
   "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground pointer-coarse:min-h-11";
 
-export function SidebarNav() {
+/** Counts shown next to nav links, keyed by href (server components streamed in by the layout). */
+export type NavCounts = Partial<Record<string, React.ReactNode>>;
+
+export function SidebarNav({ counts }: { counts?: NavCounts }) {
   const { openCommandMenu, openShortcuts } = useShell();
 
   return (
@@ -28,8 +31,8 @@ export function SidebarNav() {
 
       {/* On pages whose address isn't known at build time (e.g. /leads/[id]), the links render
           without the highlight first and highlight once the address is known. */}
-      <Suspense fallback={<NavLinks pathname={null} />}>
-        <CurrentNavLinks />
+      <Suspense fallback={<NavLinks pathname={null} counts={counts} />}>
+        <CurrentNavLinks counts={counts} />
       </Suspense>
 
       <div className="mt-auto flex flex-col gap-0.5 pt-3">
@@ -55,11 +58,11 @@ export function SidebarNav() {
   );
 }
 
-function CurrentNavLinks() {
-  return <NavLinks pathname={usePathname()} />;
+function CurrentNavLinks({ counts }: { counts?: NavCounts }) {
+  return <NavLinks pathname={usePathname()} counts={counts} />;
 }
 
-function NavLinks({ pathname }: { pathname: string | null }) {
+function NavLinks({ pathname, counts }: { pathname: string | null; counts?: NavCounts }) {
   const { closeMobileNav } = useShell();
   return (["work", "manage"] as const).map((group, gi) => (
     <div key={group} className="flex flex-col gap-0.5">
@@ -79,6 +82,7 @@ function NavLinks({ pathname }: { pathname: string | null }) {
           >
             <item.icon aria-hidden="true" className="size-4" />
             {item.label}
+            {counts?.[item.href]}
           </Link>
         );
       })}

@@ -46,13 +46,14 @@ type SeedLead = {
   country?: string;
   /** Defaults to Europe/London; pass null for "unknown", which the queue can always call. */
   timezone?: string | null;
+  nextFollowUpAt?: Date;
 };
 
 export async function seedLead(lead: SeedLead): Promise<{ id: string; phoneE164: string }> {
   const phoneE164 = lead.phoneE164 ?? randomUkPhone().e164;
   const [row] = await query<{ id: string }>(
-    `insert into leads (name, company, phone_e164, phone_raw, country, timezone, list_id, tags, status)
-     values ($1, $2, $3, $3, $4, $5, $6, $7, $8) returning id`,
+    `insert into leads (name, company, phone_e164, phone_raw, country, timezone, list_id, tags, status, next_follow_up_at)
+     values ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9) returning id`,
     [
       lead.name,
       lead.company ?? null,
@@ -62,6 +63,7 @@ export async function seedLead(lead: SeedLead): Promise<{ id: string; phoneE164:
       lead.listId ?? null,
       lead.tags ?? [],
       lead.status ?? "new",
+      lead.nextFollowUpAt ?? null,
     ],
   );
   return { id: row.id, phoneE164 };
