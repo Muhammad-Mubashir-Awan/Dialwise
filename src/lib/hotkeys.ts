@@ -27,6 +27,10 @@ export function createSequence(leader: string, timeoutMs = 1200, now: () => numb
       }
       return { kind: "none" };
     },
+    /** True while waiting for the second key, so other shortcuts can stand aside (G then S is not "skip"). */
+    pending(): boolean {
+      return armedAt !== null && now() - armedAt <= timeoutMs;
+    },
     reset() {
       armedAt = null;
     },

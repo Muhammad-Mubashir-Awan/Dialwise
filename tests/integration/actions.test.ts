@@ -20,6 +20,7 @@ vi.mock("@/lib/session", () => ({
 
 const { deleteLeadAction, saveLead } = await import("@/lib/actions/leads");
 const { deleteListAction, saveList } = await import("@/lib/actions/lists");
+const { logCallAction, undoCallAction } = await import("@/lib/actions/calls");
 
 let close: () => Promise<void>;
 
@@ -138,5 +139,57 @@ describe("list actions", () => {
     mocks.signedIn = false;
     await expect(saveList({ submittedAt: 0 }, formData({ name: "Dental clinics" }))).rejects.toThrow("NEXT_REDIRECT");
     expect(await mocks.db.select().from(lists)).toEqual([]);
+  });
+});
+
+describe("call actions", () => {
+  const addLead = async () => (await saveLead(initial, leadForm())).saved!.id;
+  const inHours = (h: number) => new Date(Date.now() + h * 3_600_000);
+
+  it("logs a call, refreshes the queue, and can undo it", async () => {
+    const leadId = await addLead();
+    mocks.refresh.mockClear();
+
+    const logged = await logCallAction({
+      leadId,
+      outcome: "callback",
+      note: " Call after lunch ",
+      followUpAt: inHours(3),
+    });
+    expect(logged).toMatchObject({ ok: true, leadId, leadName: "Amelia Hart", outcome: "callback" });
+    const [call] = await mocks.db.select().from(calls);
+    expect(call).toMatchObject({ outcome: "callback", note: "Call after lunch" });
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+
+    if (!logged.ok) throw new Error(logged.error);
+    expect(await undoCallAction({ callId: logged.callId, before: logged.before })).toEqual({
+      ok: true,
+      leadId,
+      leadName: "Amelia Hart",
+    });
+    expect(await mocks.db.select().from(calls)).toEqual([]);
+    const [lead] = await mocks.db.select().from(leads);
+    expect(lead).toMatchObject({ status: "new", nextFollowUpAt: null, lastCalledAt: null });
+  });
+
+  it("explains a missing follow-up time and rejects bad input", async () => {
+    const leadId = await addLead();
+    expect(await logCallAction({ leadId, outcome: "interested" })).toEqual({
+      ok: false,
+      error: "Pick when to follow up.",
+    });
+    expect((await logCallAction({ leadId, outcome: "shouted" })).ok).toBe(false);
+    expect((await logCallAction({ leadId: "nope", outcome: "no_answer" })).ok).toBe(false);
+    expect(await mocks.db.select().from(calls)).toEqual([]);
+  });
+
+  it("logs nothing and undoes nothing when nobody is signed in", async () => {
+    const leadId = await addLead();
+    const logged = await logCallAction({ leadId, outcome: "no_answer" });
+    mocks.signedIn = false;
+    await expect(logCallAction({ leadId, outcome: "no_answer" })).rejects.toThrow("NEXT_REDIRECT");
+    if (!logged.ok) throw new Error(logged.error);
+    await expect(undoCallAction({ callId: logged.callId, before: logged.before })).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(calls)).toHaveLength(1);
   });
 });

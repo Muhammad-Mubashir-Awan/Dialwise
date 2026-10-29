@@ -40,3 +40,58 @@ export function isInCallWindow(zone: string | null, at: Date, window: CallWindow
   const { weekday, minutes } = localClock(zone, at);
   return window.days.includes(weekday) && minutes >= parseClock(window.start) && minutes < parseClock(window.end);
 }
+
+export type LocalDate = { year: number; month: number; day: number };
+
+const calendars = new Map<string, Intl.DateTimeFormat>();
+
+function wallClock(zone: string, at: Date) {
+  let calendar = calendars.get(zone);
+  if (!calendar) {
+    calendar = new Intl.DateTimeFormat("en-US", {
+      timeZone: zone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+    calendars.set(zone, calendar);
+  }
+  const parts = Object.fromEntries(calendar.formatToParts(at).map((p) => [p.type, Number(p.value)]));
+  return parts as { year: number; month: number; day: number; hour: number; minute: number; second: number };
+}
+
+/** The calendar date at `at` in `zone`. */
+export function localDate(zone: string, at: Date): LocalDate {
+  const { year, month, day } = wallClock(zone, at);
+  return { year, month, day };
+}
+
+/** How far `zone`'s clock is ahead of UTC at `at`, in milliseconds. */
+function offsetAt(zone: string, at: number): number {
+  const p = wallClock(zone, new Date(at));
+  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - (at - (at % 1000));
+}
+
+/** The instant when `zone`'s clock shows `minutes` after midnight on `date`. Days past month end roll over. */
+export function zonedTime(zone: string, date: LocalDate, minutes: number): Date {
+  const wall = Date.UTC(date.year, date.month - 1, date.day, 0, minutes);
+  // Guess with the offset at the wall time, then correct with the offset at the guess (handles DST changes).
+  const guess = wall - offsetAt(zone, wall);
+  return new Date(wall - offsetAt(zone, guess));
+}
+
+/** When the lead's call hours next open: `from` itself if they're open now, null if no day is a call day. */
+export function nextWindowOpen(zone: string, from: Date, window: CallWindow): Date | null {
+  if (isInCallWindow(zone, from, window)) return from;
+  const today = localDate(zone, from);
+  const start = parseClock(window.start);
+  for (let i = 0; i <= 7; i++) {
+    const at = zonedTime(zone, { ...today, day: today.day + i }, start);
+    if (at > from && isInCallWindow(zone, at, window)) return at;
+  }
+  return null;
+}

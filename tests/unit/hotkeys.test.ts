@@ -44,4 +44,17 @@ describe("createSequence", () => {
     seq.press("q");
     expect(seq.press("q")).toEqual({ kind: "none" });
   });
+
+  it("says whether it's waiting for the second key", () => {
+    let t = 0;
+    const seq = createSequence("g", 1000, () => t);
+    expect(seq.pending()).toBe(false);
+    seq.press("g");
+    expect(seq.pending()).toBe(true);
+    t = 1500;
+    expect(seq.pending()).toBe(false);
+    seq.press("g");
+    seq.press("s");
+    expect(seq.pending()).toBe(false);
+  });
 });

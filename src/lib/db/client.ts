@@ -9,7 +9,12 @@ function createDb() {
     throw new Error("DATABASE_URL is not set. Copy .env.example to .env.local and add your Neon connection string.");
   }
   // A small pool: one person uses the app, and Neon's pooled connection string does the heavy pooling.
-  const pool = new Pool({ connectionString: url, max: 3, idleTimeoutMillis: 5_000 });
+  // DATABASE_POOL_MAX=1 is used by the e2e server, whose in-memory database has a single session.
+  const pool = new Pool({
+    connectionString: url,
+    max: Number(process.env.DATABASE_POOL_MAX) || 3,
+    idleTimeoutMillis: 5_000,
+  });
   return drizzle({ client: pool, schema });
 }
 

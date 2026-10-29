@@ -40,3 +40,39 @@ export const CONVERSATION_OUTCOMES: CallOutcome[] = [
 
 /** Statuses that count as a win in lists and stats. */
 export const WON_STATUSES: LeadStatus[] = ["interested", "meeting_booked"];
+
+/** Statuses that take a lead out of the queue. A booked meeting still shows in Follow-ups. */
+export const CLOSED_STATUSES: LeadStatus[] = ["meeting_booked", "not_interested", "do_not_call", "bad_number"];
+
+/** No answer and voicemail wait for the retry gap before the lead comes back. */
+export const RETRY_OUTCOMES: CallOutcome[] = ["no_answer", "voicemail"];
+
+const FOLLOW_UP_OUTCOMES: CallOutcome[] = ["callback", "interested", "meeting_booked"];
+
+/** Outcomes that need a time: the follow-up, or the meeting for meeting_booked. */
+export function needsFollowUp(outcome: CallOutcome): boolean {
+  return FOLLOW_UP_OUTCOMES.includes(outcome);
+}
+
+/**
+ * The lead's status after a call. Attempts (no answer, voicemail, gatekeeper) only move a new lead to
+ * contacted, a callback doesn't downgrade an interested lead, and do not call is permanent.
+ */
+export function nextStatus(current: LeadStatus, outcome: CallOutcome): LeadStatus {
+  if (current === "do_not_call") return current;
+  switch (outcome) {
+    case "no_answer":
+    case "voicemail":
+    case "gatekeeper":
+      return current === "new" ? "contacted" : current;
+    case "callback":
+      return current === "interested" ? current : "callback";
+    case "wrong_number":
+      return "bad_number";
+    case "interested":
+    case "meeting_booked":
+    case "not_interested":
+    case "do_not_call":
+      return outcome;
+  }
+}
