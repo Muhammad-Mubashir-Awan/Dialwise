@@ -1,15 +1,16 @@
 # Tasks: Cold-Call CRM
 
-Source of truth: `SPEC.md`. Plan: `tasks/plan.md`. Each task ends green: `npm run lint && npx tsc --noEmit && npm test`.
+Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). Plan: `tasks/plan.md`. Each task ends green: `npm run lint && npx tsc --noEmit && npm test`.
 
 ## Phase 0: Setup
 - [x] Task: Spec written and decisions recorded
-  - Acceptance: SPEC.md has no open questions for v1
-  - Files: SPEC.md
-- [ ] Task: Git repo and ignore rules
-  - Acceptance: `git init`, `.gitignore` covers `.env*`, `node_modules`, `.next`, `graphify-out/cache`; first commit contains SPEC.md and tasks/
-  - Verify: `git status` clean, `git check-ignore .env.local` matches
-  - Files: .gitignore
+  - Acceptance: the core spec has no open questions
+  - Files: SPEC-core-crm.md
+- [x] Task: Git repo and ignore rules
+  - Acceptance: `git init`, `.gitignore` covers `.env*`, `node_modules`, `.next`, `graphify-out/cache`; `.gitattributes` keeps LF line endings
+  - Files: .gitignore, .gitattributes
+- [x] Task: Capability map for core + phase-2 modules
+  - Files: CAPABILITY-MAP.md
 
 ## Phase 1: UI design (gate: owner approval)
 - [ ] Task: Design system
@@ -27,7 +28,7 @@ Source of truth: `SPEC.md`. Plan: `tasks/plan.md`. Each task ends green: `npm ru
   - Verify: `npm run build`, `npm test`, `npx playwright test` (smoke)
   - Files: package.json, src/app/layout.tsx, src/app/globals.css, vitest.config.ts, playwright.config.ts
 - [ ] Task: DB layer (slice 2)
-  - Acceptance: schema per SPEC, first migration generated, PGlite test helper
+  - Acceptance: schema per SPEC (including dialer-ready `calls.channel`, `calls.duration_sec`, `calls.external_id`), first migration generated, PGlite test helper
   - Verify: integration test inserts and reads a lead
   - Files: drizzle.config.ts, src/lib/db/schema.ts, src/lib/db/client.ts, tests/helpers/db.ts
 - [ ] Task: Run `/graphify .` to build the codebase knowledge graph
@@ -82,3 +83,12 @@ Source of truth: `SPEC.md`. Plan: `tasks/plan.md`. Each task ends green: `npm ru
   - Verify: owner signs in on prod; 10k seeded leads on a Neon branch → queue < 300 ms; Lighthouse ≥ 90 on `/queue`
 
 Run `/graphify . --update` after every slice from slice 3 on.
+
+## Phase 2 modules (after core-crm is deployed and in use)
+Each module: write `SPEC-<id>.md` → add its screens to the prototype and get approval → plan and tasks → build with tests → `/review`.
+
+- [ ] `pipeline`: deals, stages, board view (keyboard and drag), pipeline value in stats
+- [ ] `dialer`: Twilio browser calling, auto-logged calls, recordings, recording notice, voicemail drop, caller ID per country
+  - Before building: check current Twilio prices and the recording-consent rules for each country you call; owner creates the Twilio account
+- [ ] `email-calendar`: Gmail templates logged on the lead, Google Calendar invite on "Meeting booked"
+  - Before building: settle how Google tokens are stored and refreshed, and Gmail vs Resend for sending

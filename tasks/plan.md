@@ -1,5 +1,7 @@
 # Plan: Cold-Call CRM (personal, hosted)
 
+> Update (2026-10-29): this plan covers module `core-crm`. Phase 2 adds `pipeline`, `dialer` and `email-calendar`, each with its own spec and plan. See `CAPABILITY-MAP.md`. The core spec is now `SPEC-core-crm.md`, and `calls` gets dialer-ready fields (`channel`, `duration_sec`, `external_id`).
+
 ## Context
 You make cold calls to sell a service/product and need a personal customer-management tool for that work: leads, a call queue, quick outcome logging, follow-ups, call lists, CSV import/export and stats. SPEC.md is written but still in a temporary session folder. You asked for the project to live in **`D:\Work Files\AAM\CMS TOOL`** (currently empty), and for Context7, agent-skills and graphify to be used throughout.
 

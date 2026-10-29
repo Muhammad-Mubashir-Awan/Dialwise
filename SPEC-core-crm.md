@@ -1,4 +1,6 @@
-# Spec: Cold-Call CRM (personal)
+# Spec: core-crm (Cold-Call CRM, personal)
+
+Module `core-crm` in [CAPABILITY-MAP.md](CAPABILITY-MAP.md). The phase-2 modules (`pipeline`, `dialer`, `email-calendar`) build on this one and get their own specs.
 
 ## Objective
 A hosted, single-user web app for managing cold-calling prospects when selling a service/product. It replaces spreadsheets and sticky notes with a fast call workflow.
@@ -27,11 +29,17 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 - Import of a 1,000-row CSV completes with a summary (added / duplicates / invalid).
 - A lead whose local time is outside the call window is not served by the queue; a lead with no known time zone is.
 - A lead called with `no_answer`/`voicemail` does not reappear in the queue until the retry gap has passed.
+- A lead with a follow-up set in the future is not served by the queue until that time; once due, it goes to the front.
 - Phone numbers from different countries are normalized to E.164 and deduplicated on that value.
 - Any request without the allowed Google account is rejected (401/redirect), including API routes and server actions.
 
-### Out of scope (v1)
-Dialing/softphone, call recording, email/SMS sending, multi-user/teams, calendar sync, AI features.
+### Out of scope for this module
+- Phase 2 modules, each with its own spec (see [CAPABILITY-MAP.md](CAPABILITY-MAP.md)):
+  - browser dialer, call recording and voicemail drop (`dialer`)
+  - deals pipeline (`pipeline`)
+  - Gmail templates and Google Calendar invites (`email-calendar`)
+- Not planned: SMS, automation workflows, funnels/websites, multi-user/teams, AI features.
+- This module keeps calls dialer-ready: `calls.channel`, `calls.duration_sec` and `calls.external_id` exist from the first migration, so `dialer` needs no change to existing data.
 
 ## Tech Stack
 - Next.js 16 (App Router) + TypeScript (strict), React Server Components + Server Actions; `proxy.ts` for early auth redirects
@@ -71,14 +79,17 @@ src/auth.ts           → Auth.js config + single-email allowlist
 tests/                → unit + integration tests (Vitest)
 e2e/                  → Playwright tests
 docs/                 → notes, ADRs
-SPEC.md               → this file
+CAPABILITY-MAP.md     → modules and build order
+SPEC-core-crm.md      → this file (one SPEC-<module>.md per module)
+design/               → approved prototype and design tokens
+tasks/                → plan.md and todo.md
 ```
 
 ## Data Model
 - `lists`: id uuid, name, created_at
 - `leads`: id, list_id → lists (nullable), name, company, phone_e164 (unique), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
   - Indexes: status, list_id, next_follow_up_at, last_called_at, GIN(tags)
-- `calls`: id, lead_id → leads (cascade), outcome, note, follow_up_at, called_at
+- `calls`: id, lead_id → leads (cascade), outcome, note, follow_up_at, called_at, channel (`manual` | `dialer`, default `manual`), duration_sec (nullable), external_id (nullable; the provider's call id, set by `dialer`)
 - `settings` (single row): call_window_start, call_window_end, call_days, retry_gap_hours, default_country
 - Status: new, contacted, callback, interested, meeting_booked, not_interested, do_not_call, bad_number
 - Outcome: no_answer, voicemail, gatekeeper, callback, interested, meeting_booked, not_interested, wrong_number, do_not_call
