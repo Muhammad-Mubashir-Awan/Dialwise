@@ -57,12 +57,12 @@ Install:   npm install
 Dev:       npm run dev
 Build:     npm run build
 Lint:      npm run lint
-Typecheck: npx tsc --noEmit
-Unit:      npm test            (Vitest)
-Unit cov:  npm test -- --coverage
-E2E:       npx playwright test
-DB gen:    npx drizzle-kit generate
-DB migrate:npx drizzle-kit migrate
+Typecheck: npm run typecheck   (next typegen + tsc)
+All checks:npm run check       (lint + typecheck + format check + unit/integration tests)
+Tests:     npm test            (Vitest; integration tests use PGlite, no database needed)
+E2E:       npm run test:e2e    (production build + Playwright, desktop and phone)
+DB gen:    npm run db:generate (new migration in drizzle/ from schema changes)
+DB migrate:npm run db:migrate  (apply migrations to DATABASE_URL from .env.local)
 ```
 
 ## Project Structure
@@ -70,7 +70,8 @@ DB migrate:npx drizzle-kit migrate
 src/app/              → routes (queue, leads, lists, follow-ups, stats, import, login)
 src/app/api/auth/     → Auth.js handlers
 src/components/       → UI components (shadcn in components/ui)
-src/lib/db/           → Drizzle schema, client, migrations
+src/lib/db/           → Drizzle schema and client
+drizzle/              → generated SQL migrations (+ hand-written data migrations)
 src/lib/actions/      → server actions (leads, calls, lists, import)
 src/lib/queue.ts      → next-lead selection logic (pure, unit tested)
 src/lib/csv.ts        → CSV parse/validate/dedupe (pure, unit tested)
@@ -87,10 +88,10 @@ tasks/                → plan.md and todo.md
 
 ## Data Model
 - `lists`: id uuid, name, created_at
-- `leads`: id, list_id → lists (nullable), name, company, phone_e164 (unique), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
+- `leads`: id, list_id → lists (nullable, set null when the list is deleted), name, role (job title, shown in the prototype), company, phone_e164 (unique, checked as `+` and 8–15 digits), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
   - Indexes: status, list_id, next_follow_up_at, last_called_at, GIN(tags)
 - `calls`: id, lead_id → leads (cascade), outcome, note, follow_up_at, called_at, channel (`manual` | `dialer`, default `manual`), duration_sec (nullable), external_id (nullable; the provider's call id, set by `dialer`)
-- `settings` (single row): call_window_start, call_window_end, call_days, retry_gap_hours, default_country
+- `settings` (single row, id = 1, seeded by migration): call_window_start (09:00), call_window_end (18:00, must be after start), call_days (0 = Sun … 6 = Sat; default Mon–Fri), retry_gap_hours (1–168, default 24), default_country (default GB)
 - Status: new, contacted, callback, interested, meeting_booked, not_interested, do_not_call, bad_number
 - Outcome: no_answer, voicemail, gatekeeper, callback, interested, meeting_booked, not_interested, wrong_number, do_not_call
 - Outcome → status transitions live in `src/lib/outcomes.ts`. Call attempts never downgrade `interested`/`callback`; `do_not_call` is terminal.

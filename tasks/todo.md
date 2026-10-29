@@ -23,11 +23,11 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Files: design/prototype.html
 
 ## Phase 2: Foundation
-- [ ] Task: Scaffold (slice 1)
+- [x] Task: Scaffold (slice 1)
   - Acceptance: Next 16 + TS strict + Tailwind + shadcn with approved tokens; app shell (sidebar, theme toggle, command palette); Vitest + Playwright wired
   - Verify: `npm run build`, `npm test`, `npx playwright test` (smoke)
   - Files: package.json, src/app/layout.tsx, src/app/globals.css, vitest.config.ts, playwright.config.ts
-- [ ] Task: DB layer (slice 2)
+- [x] Task: DB layer (slice 2)
   - Acceptance: schema per SPEC (including dialer-ready `calls.channel`, `calls.duration_sec`, `calls.external_id`), first migration generated, PGlite test helper
   - Verify: integration test inserts and reads a lead
   - Files: drizzle.config.ts, src/lib/db/schema.ts, src/lib/db/client.ts, tests/helpers/db.ts
@@ -57,6 +57,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [ ] Task: Queue + call logging (slice 5)
   - Acceptance: queue query per SPEC (terminal statuses, retry gap, local call window, ordering, list scope); `logCall` via `db.batch`; `/queue` UI with keys 1–9, note, follow-up picker
   - Verify: PGlite tests across time zones; `logCall` atomicity; DNC never served; e2e work-the-queue
+  - Decide first: `db.batch` exists on Neon's HTTP driver but not on PGlite. Write `logCall` as one SQL statement (a data-modifying CTE: insert the call and update the lead together), which is atomic on both, or switch the app to Neon's WebSocket driver, which supports transactions.
   - Files: src/lib/queue.ts, src/lib/actions/calls.ts, src/app/queue/
 - [ ] Task: `/review` on slices 4–5
 - [ ] Task: Follow-ups (slice 6)

@@ -3,6 +3,7 @@ coverage/
 playwright-report/
 test-results/
 graphify-out/
+drizzle/
 package-lock.json
 next-env.d.ts
 AGENTS.md
