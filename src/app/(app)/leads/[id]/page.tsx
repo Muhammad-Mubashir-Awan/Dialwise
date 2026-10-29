@@ -10,6 +10,7 @@ import { PageBody, PageHeader } from "@/components/page-header";
 import { CallWindowChip, DateTime, FollowUpTime, LeadLocalTime, RelativeTime } from "@/components/times";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { callWindowOf } from "@/lib/call-window";
 import { getLead } from "@/lib/data/leads";
 import { getSettings } from "@/lib/data/settings";
 import { getDb } from "@/lib/db/client";
@@ -38,7 +39,7 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
   const [lead, options, settings] = await Promise.all([getLead(db, id), getLeadFormOptions(db), getSettings(db)]);
   if (!lead) notFound();
 
-  const callWindow = { start: settings.callWindowStart, end: settings.callWindowEnd, days: settings.callDays };
+  const callWindow = callWindowOf(settings);
   const phone = formatPhone(lead.phoneE164);
   const site = lead.website ? websiteHref(lead.website) : null;
   const headline = [lead.role, lead.company].filter(Boolean).join(" at ");

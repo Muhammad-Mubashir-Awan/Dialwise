@@ -16,10 +16,10 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
-import { z } from "zod";
-import { type CallWindow, isInCallWindow, nextWindowOpen } from "@/lib/call-window";
+import { type CallWindow, callWindowOf, isInCallWindow, nextWindowOpen } from "@/lib/call-window";
 import type { AppDatabase } from "@/lib/db/client";
 import { type Call, type CallOutcome, calls, type Lead, leads, lists, type Settings } from "@/lib/db/schema";
+import { isUuid } from "@/lib/ids";
 import { CLOSED_STATUSES, RETRY_OUTCOMES } from "@/lib/outcomes";
 
 export type QueueLead = Lead & {
@@ -48,14 +48,6 @@ export type QueueOptions = {
   pinnedId?: string | null;
   limit?: number;
 };
-
-export const callWindowOf = (s: Settings): CallWindow => ({
-  start: s.callWindowStart,
-  end: s.callWindowEnd,
-  days: s.callDays,
-});
-
-const isUuid = (id: string) => z.uuid().safeParse(id).success;
 
 /** Splits the time zones in use into open (in call hours now) and closed. Unknown names count as open. */
 async function zonesNow(db: AppDatabase, now: Date, window: CallWindow) {

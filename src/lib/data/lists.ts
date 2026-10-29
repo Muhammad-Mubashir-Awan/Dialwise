@@ -1,11 +1,9 @@
 /** Call list reads and writes. Each function takes the database; callers check the session first. */
 import { and, asc, count, eq, inArray, ne, sql } from "drizzle-orm";
-import { z } from "zod";
 import type { AppDatabase } from "@/lib/db/client";
 import { calls, leads, lists } from "@/lib/db/schema";
+import { isUuid } from "@/lib/ids";
 import { CONVERSATION_OUTCOMES, WON_STATUSES } from "@/lib/outcomes";
-
-const isUuid = (id: string) => z.uuid().safeParse(id).success;
 
 export type ListResult = { ok: true } | { ok: false; error: string };
 

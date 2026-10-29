@@ -54,6 +54,39 @@ test.describe("keyboard", () => {
     await expect(page.getByText("Contacted", { exact: true })).toBeVisible();
   });
 
+  test("two quick outcomes log two leads, and a lead still saving never comes back", async ({ page }) => {
+    const names = ["Ava", "Ben", "Cal", "Dee"].map((n) => `${n} ${unique()}`);
+    const { listId, leads } = await seedQueue(...names);
+
+    await openQueue(page, `/queue?list=${listId}`);
+    await expect(leadOnScreen(page, names[0])).toBeVisible();
+    // Record every lead that appears on screen, in order.
+    await page.evaluate(() => {
+      const seen: string[] = [];
+      Object.assign(window, { seenLeads: seen });
+      const record = () => {
+        const name = document.getElementById("queue-lead-name")?.textContent ?? "";
+        if (seen.at(-1) !== name) seen.push(name);
+      };
+      record();
+      new MutationObserver(record).observe(document.body, { subtree: true, childList: true, characterData: true });
+    });
+
+    await page.keyboard.press("1");
+    await page.keyboard.press("1");
+    await expect(page.getByText(`No answer logged for ${names[0]}`)).toBeVisible();
+    await expect(page.getByText(`No answer logged for ${names[1]}`)).toBeVisible();
+    await expect(leadOnScreen(page, names[2])).toBeVisible();
+
+    expect(await page.evaluate(() => (window as unknown as { seenLeads: string[] }).seenLeads)).toEqual(
+      names.slice(0, 3),
+    );
+    for (const lead of leads.slice(0, 2)) {
+      await open(page, `/leads/${lead.id}`);
+      await expect(page.getByRole("region", { name: "Call history" })).toContainText("1 call");
+    }
+  });
+
   test("U undoes the last call and brings the lead back", async ({ page }) => {
     const name = `Oliver ${unique()}`;
     const { listId } = await seedQueue(name);

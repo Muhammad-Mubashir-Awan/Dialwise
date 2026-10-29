@@ -55,13 +55,15 @@ export function QueueView({
   const noteRef = useRef<HTMLTextAreaElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // Skips last for this visit. Logged leads are hidden at once, until the refreshed queue arrives.
+  // Skips last for this visit. Logged leads are hidden at once and stay hidden while their call saves:
+  // fresh data from an earlier call must not bring back a lead whose own call hasn't landed yet.
   const [skipped, setSkipped] = useState<string[]>([]);
   const [hidden, setHidden] = useState<string[]>([]);
+  const [saving, setSaving] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(loadedAt);
   if (loaded !== loadedAt) {
     setLoaded(loadedAt);
-    setHidden([]);
+    setHidden(hidden.filter((id) => saving.includes(id)));
   }
 
   const order = arrangeQueue(ready, { pinned, skipped, hidden });
@@ -89,8 +91,10 @@ export function QueueView({
     const target = lead;
     const text = note.trim();
     setHidden((ids) => [...ids, target.id]);
+    setSaving((ids) => [...ids, target.id]);
     startTransition(async () => {
       const result = await logCallAction({ leadId: target.id, outcome: chosen, note: text, followUpAt });
+      setSaving((ids) => ids.filter((id) => id !== target.id));
       if (!result.ok) {
         setRestore({ leadId: target.id, note: text });
         setHidden((ids) => ids.filter((id) => id !== target.id));

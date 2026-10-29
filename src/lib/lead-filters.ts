@@ -1,5 +1,6 @@
 /** The leads page's filters, kept in the URL so they survive reloads and can be shared. Pure. */
 import type { LeadStatus } from "@/lib/db/schema";
+import { isUuid } from "@/lib/ids";
 import { LEAD_STATUS_OPTIONS } from "@/lib/outcomes";
 
 export type LeadFilterValues = {
@@ -14,7 +15,6 @@ export type LeadFilterValues = {
 type Params = Record<string, string | string[] | undefined>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function parseLeadFilters(params: Params): LeadFilterValues {
   const status = first(params.status);
@@ -24,7 +24,7 @@ export function parseLeadFilters(params: Params): LeadFilterValues {
   const q = first(params.q);
   if (q) filters.q = q.slice(0, 200);
   if (status && (LEAD_STATUS_OPTIONS as string[]).includes(status)) filters.status = status as LeadStatus;
-  if (list && (list === "none" || UUID.test(list))) filters.list = list;
+  if (list && (list === "none" || isUuid(list))) filters.list = list;
   const tag = first(params.tag);
   if (tag) filters.tag = tag.toLowerCase();
   return filters;

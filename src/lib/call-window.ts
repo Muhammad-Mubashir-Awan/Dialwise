@@ -1,5 +1,7 @@
 /** Whether it's a good time to call a lead, judged on the lead's own clock. Pure; shared by the leads table and the queue. */
 
+import type { Settings } from "@/lib/db/schema";
+
 export type CallWindow = {
   /** "09:00" or "09:00:00" (Postgres `time`). */
   start: string;
@@ -7,6 +9,13 @@ export type CallWindow = {
   /** 0 = Sunday … 6 = Saturday. */
   days: number[];
 };
+
+/** The call hours from the settings row. */
+export const callWindowOf = (settings: Settings): CallWindow => ({
+  start: settings.callWindowStart,
+  end: settings.callWindowEnd,
+  days: settings.callDays,
+});
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const clocks = new Map<string, Intl.DateTimeFormat>();

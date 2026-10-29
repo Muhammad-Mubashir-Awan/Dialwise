@@ -1,7 +1,7 @@
 /** Lead reads and writes. Each function takes the database, so tests can pass PGlite; callers check the session first. */
 import { and, arrayContains, count, desc, eq, ilike, isNull, like, or, sql, type SQL } from "drizzle-orm";
-import { z } from "zod";
 import type { AppDatabase } from "@/lib/db/client";
+import { isUuid } from "@/lib/ids";
 import { FOREIGN_KEY_VIOLATION, pgErrorCode, UNIQUE_VIOLATION } from "@/lib/db/errors";
 import { calls, type Call, type Lead, type LeadStatus, leads, lists } from "@/lib/db/schema";
 import type { LeadErrors, LeadValues } from "@/lib/lead-input";
@@ -17,8 +17,6 @@ export type LeadFilters = {
   /** 1-based. */
   page?: number;
 };
-
-const isUuid = (id: string) => z.uuid().safeParse(id).success;
 
 /** Escapes LIKE wildcards so a search for "%" finds a literal %. */
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, "\\$&");

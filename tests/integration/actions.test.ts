@@ -135,10 +135,18 @@ describe("list actions", () => {
     });
   });
 
-  it("changes nothing when nobody is signed in", async () => {
+  it("creates nothing when nobody is signed in", async () => {
     mocks.signedIn = false;
     await expect(saveList({ submittedAt: 0 }, formData({ name: "Dental clinics" }))).rejects.toThrow("NEXT_REDIRECT");
     expect(await mocks.db.select().from(lists)).toEqual([]);
+  });
+
+  it("deletes nothing when nobody is signed in", async () => {
+    await saveList({ submittedAt: 0 }, formData({ name: "Dental clinics" }));
+    const [list] = await mocks.db.select().from(lists);
+    mocks.signedIn = false;
+    await expect(deleteListAction(list.id)).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(lists)).toHaveLength(1);
   });
 });
 

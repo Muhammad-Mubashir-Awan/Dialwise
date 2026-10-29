@@ -6,6 +6,7 @@ import { LeadsTable } from "@/components/leads/leads-table";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { callWindowOf } from "@/lib/call-window";
 import { findLeads, leadTags } from "@/lib/data/leads";
 import { allLists } from "@/lib/data/lists";
 import { getSettings } from "@/lib/data/settings";
@@ -70,7 +71,7 @@ async function Leads({ searchParams }: { searchParams: SearchParams }) {
       matching={result.matching}
       page={result.page}
       pageCount={result.pageCount}
-      callWindow={{ start: settings.callWindowStart, end: settings.callWindowEnd, days: settings.callDays }}
+      callWindow={callWindowOf(settings)}
     />
   );
 }

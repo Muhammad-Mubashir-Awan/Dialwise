@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { leadsHref, parseLeadFilters } from "@/lib/lead-filters";
+import { isUuid } from "@/lib/ids";
 
 const LIST_ID = "6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60";
 
@@ -41,5 +42,15 @@ describe("leadsHref", () => {
 
   it("keeps the filters when moving between pages", () => {
     expect(leadsHref({ q: "a", page: 1 }, { page: 2 })).toBe("/leads?q=a&page=2");
+  });
+});
+
+describe("isUuid", () => {
+  it("accepts the ids Postgres makes, in either case, and nothing else", () => {
+    expect(isUuid("6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60")).toBe(true);
+    expect(isUuid("6F1C2A4E-8B0D-4C3E-9F7A-1B2C3D4E5F60")).toBe(true);
+    expect(isUuid("6f1c2a4e8b0d4c3e9f7a1b2c3d4e5f60")).toBe(false);
+    expect(isUuid("none")).toBe(false);
+    expect(isUuid("")).toBe(false);
   });
 });

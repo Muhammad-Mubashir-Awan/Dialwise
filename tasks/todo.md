@@ -64,13 +64,15 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - The e2e database (pglite-socket) shares one Postgres session across connections, so the e2e server runs with `DATABASE_POOL_MAX=1`.
   - Files: src/lib/queue.ts, src/lib/data/queue.ts, src/lib/data/calls.ts, src/lib/actions/calls.ts, src/app/(app)/queue/, src/components/queue/
   - Result: 227 unit/integration and 61 e2e tests. Call hours are checked in the app per distinct time zone, then the query filters by open zones. Removing the transaction makes the atomicity test fail. Undo works on the latest call within 15 minutes. Keys aren't blocked while a call saves (Next.js queues server actions), so a quick second outcome isn't lost. Added "Call now" on the lead page and "Work list · N" on the lists page.
-- [ ] Task: `/review` on slices 4–5
+- [x] Task: `/review` on slices 4–5
+  - Result: no blockers. Fixed: a lead whose call was still saving could come back on screen when an earlier call's data arrived, risking a double log. React's current batching of overlapping transitions hides it, but React calls that a limitation it may remove, so leads now stay hidden until their own call saves (new e2e test). Added the missing signed-out test for deleting a list. Shared `isUuid` and `callWindowOf` helpers. Mutation check: 11 of 11 rules caught once the missing test was added.
 - [ ] Task: Follow-ups (slice 6)
   - Acceptance: due today and overdue lists; new call clears/replaces follow-up
   - Verify: integration test; e2e follow-up appears in Due Today
   - Files: src/app/follow-ups/
 - [ ] Task: CSV import/export (slice 7)
   - Acceptance: column mapping, validation, dedupe on E.164, DNC skip, 500-row chunks, summary; `/api/export` streams CSV
+  - From the slice 4–5 review: validate imported time zones with `resolveTimeZone`. An unknown zone name in the database would break the local-time display (Intl throws on it).
   - Verify: 1,000-row import test with correct summary; export auth test
   - Files: src/lib/csv.ts, src/lib/actions/import.ts, src/app/import/, src/app/api/export/route.ts
 - [ ] Task: `/review` + security-and-hardening pass on slices 6–7
