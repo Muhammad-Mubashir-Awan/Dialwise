@@ -2,7 +2,7 @@
 
 import { createContext, startTransition, use, useActionState, useState, useTransition } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,6 +218,11 @@ function ListRow({ list, ready }: { list: ListSummary; ready: number }) {
           </div>
         ) : (
           <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" asChild>
+              <a href={`/api/export?type=leads&list=${list.id}`} download aria-label={`Export ${list.name} leads`}>
+                <Download aria-hidden="true" />
+              </a>
+            </Button>
             {ready > 0 ? (
               <Button variant="outline" asChild>
                 <Link href={queueHref(list.id)} aria-label={`Work ${list.name}: ${ready} ready`}>

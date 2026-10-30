@@ -1,6 +1,6 @@
 /** Validation for the lead and list forms. Pure: the server actions call these before touching the database. */
 import { z } from "zod";
-import { parsePhone } from "./phone";
+import { countryOptions, isCountryCode, parsePhone } from "./phone";
 import { resolveTimeZone } from "./timezones";
 
 const MAX_TAGS = 20;
@@ -117,6 +117,72 @@ export function parseLeadForm(input: Record<string, unknown>): LeadFormResult {
       listId,
       tags,
       notes,
+    },
+  };
+}
+
+/** One CSV row after its columns are matched to lead fields (all text, possibly empty). */
+export type RawImportLead = {
+  name: string;
+  company: string;
+  role: string;
+  phone: string;
+  email: string;
+  website: string;
+  country: string;
+  tags: string;
+  notes: string;
+};
+
+const COUNTRY_ALIASES: Record<string, string> = {
+  UK: "GB",
+  "GREAT BRITAIN": "GB",
+  ENGLAND: "GB",
+  USA: "US",
+  "UNITED STATES OF AMERICA": "US",
+  UAE: "AE",
+};
+
+/** A country column's value as an ISO code: "GB", "gb", "United Kingdom" or "UK" give "GB". Null if unknown. */
+export function countryFromText(text: string): string | null {
+  const value = text.trim().toUpperCase();
+  if (!value) return null;
+  if (isCountryCode(value)) return value;
+  return COUNTRY_ALIASES[value] ?? countryOptions().find((c) => c.name.toUpperCase() === value)?.code ?? null;
+}
+
+const clip = (text: string, max: number) => text.trim().slice(0, max) || null;
+
+/**
+ * A lead from an imported row. Only the phone must be usable; other fields are kept when valid and dropped (or
+ * shortened) when not, so one bad email doesn't lose the lead. The time zone always comes from the country.
+ */
+export function parseImportRow(
+  raw: RawImportLead,
+  { defaultCountry, listId }: { defaultCountry: string; listId: string | null },
+): { ok: true; values: LeadValues } | { ok: false } {
+  const phone = parsePhone(raw.phone, countryFromText(raw.country) ?? defaultCountry);
+  if (!phone) return { ok: false };
+  const email = raw.email.trim();
+  const website = raw.website.trim();
+  const tags = parseTags(raw.tags.replaceAll(";", ","))
+    .filter((t) => t.length <= MAX_TAG_LENGTH)
+    .slice(0, MAX_TAGS);
+  return {
+    ok: true,
+    values: {
+      name: clip(raw.name, 200) ?? clip(raw.company, 200) ?? "Unnamed lead",
+      role: clip(raw.role, 200),
+      company: clip(raw.company, 200),
+      phoneRaw: raw.phone.trim().slice(0, 50),
+      phoneE164: phone.e164,
+      country: phone.country,
+      timezone: resolveTimeZone(phone.country, null),
+      email: email.length <= 320 && z.email().safeParse(email).success ? email : null,
+      website: website.length <= 500 && websiteHref(website) ? website : null,
+      listId,
+      tags,
+      notes: clip(raw.notes, 10_000),
     },
   };
 }

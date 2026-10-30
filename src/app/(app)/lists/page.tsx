@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Download } from "lucide-react";
 import { ListsPageProvider, ListsTable, NewListButton, NewListForm } from "@/components/lists/lists-ui";
 import { PageBody, PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listSummaries } from "@/lib/data/lists";
 import { readyCountsByList } from "@/lib/data/queue";
@@ -15,6 +17,18 @@ export default function Page() {
   return (
     <ListsPageProvider>
       <PageHeader title="Lists">
+        <Button variant="outline" asChild>
+          <a href="/api/export?type=leads" download>
+            <Download aria-hidden="true" />
+            Export leads
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href="/api/export?type=calls" download>
+            <Download aria-hidden="true" />
+            Export calls
+          </a>
+        </Button>
         <NewListButton />
       </PageHeader>
       <PageBody>

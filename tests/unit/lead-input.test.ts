@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLeadForm, parseListName, parseTags, websiteHref } from "@/lib/lead-input";
+import { parseImportRow, parseLeadForm, parseListName, parseTags, websiteHref } from "@/lib/lead-input";
 
 const LIST_ID = "6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60";
 
@@ -158,5 +158,89 @@ describe("parseListName", () => {
     expect(parseListName("  ")).toEqual({ ok: false, error: "Enter a name for the list." });
     expect(parseListName("x".repeat(101))).toEqual({ ok: false, error: "Keep this under 100 characters." });
     expect(parseListName(null)).toEqual({ ok: false, error: "Enter a name for the list." });
+  });
+});
+
+describe("parseImportRow", () => {
+  const LIST = "6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60";
+  const row = (fields: Record<string, string>) => ({
+    name: "",
+    company: "",
+    role: "",
+    phone: "",
+    email: "",
+    website: "",
+    country: "",
+    tags: "",
+    notes: "",
+    ...fields,
+  });
+
+  it("builds a lead in the chosen list, with country and time zone from the number", () => {
+    expect(
+      parseImportRow(row({ name: "Amelia Hart", phone: "020 7946 0118" }), { defaultCountry: "GB", listId: LIST }),
+    ).toEqual({
+      ok: true,
+      values: {
+        name: "Amelia Hart",
+        role: null,
+        company: null,
+        phoneRaw: "020 7946 0118",
+        phoneE164: "+442079460118",
+        country: "GB",
+        timezone: "Europe/London",
+        email: null,
+        website: null,
+        listId: LIST,
+        tags: [],
+        notes: null,
+      },
+    });
+  });
+
+  it("reads the country column as a code or an English name", () => {
+    const options = { defaultCountry: "GB", listId: null };
+    for (const country of ["US", "us", "United States", "USA"]) {
+      const result = parseImportRow(row({ phone: "(212) 555-0142", country }), options);
+      expect(result.ok && result.values.phoneE164).toBe("+12125550142");
+    }
+    const uk = parseImportRow(row({ phone: "020 7946 0118", country: "UK" }), { defaultCountry: "US", listId: null });
+    expect(uk.ok && uk.values.country).toBe("GB");
+  });
+
+  it("falls back to the company, then a placeholder, for the name", () => {
+    const options = { defaultCountry: "GB", listId: null };
+    const company = parseImportRow(row({ company: "Brightpath", phone: "020 7946 0118" }), options);
+    expect(company.ok && company.values.name).toBe("Brightpath");
+    const neither = parseImportRow(row({ phone: "020 7946 0118" }), options);
+    expect(neither.ok && neither.values.name).toBe("Unnamed lead");
+  });
+
+  it("drops an email or website it can't use instead of rejecting the lead", () => {
+    const result = parseImportRow(row({ phone: "020 7946 0118", email: "n/a", website: "javascript:alert(1)" }), {
+      defaultCountry: "GB",
+      listId: null,
+    });
+    expect(result.ok && result.values).toMatchObject({ email: null, website: null });
+  });
+
+  it("splits tags on commas or semicolons, keeping up to 20 of 40 characters or less", () => {
+    const tags = ["SaaS; warm", "x".repeat(41), ...Array.from({ length: 25 }, (_, i) => `t${i}`)].join(",");
+    const result = parseImportRow(row({ phone: "020 7946 0118", tags }), { defaultCountry: "GB", listId: null });
+    expect(result.ok && result.values.tags).toEqual(["saas", "warm", ...Array.from({ length: 18 }, (_, i) => `t${i}`)]);
+  });
+
+  it("shortens text that is too long", () => {
+    const result = parseImportRow(row({ name: "x".repeat(300), phone: "020 7946 0118", notes: "y".repeat(12_000) }), {
+      defaultCountry: "GB",
+      listId: null,
+    });
+    expect(result.ok && [result.values.name.length, result.values.notes?.length]).toEqual([200, 10_000]);
+  });
+
+  it("rejects a row without a usable phone number", () => {
+    expect(parseImportRow(row({ name: "Mystery", phone: "n/a" }), { defaultCountry: "GB", listId: null })).toEqual({
+      ok: false,
+    });
   });
 });

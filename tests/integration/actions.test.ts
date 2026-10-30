@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { eq } from "drizzle-orm";
 import { calls, leads, lists } from "@/lib/db/schema";
 import { createTestDb, resetTestDb, type TestDb } from "../helpers/db";
 
@@ -21,6 +22,7 @@ vi.mock("@/lib/session", () => ({
 const { deleteLeadAction, saveLead } = await import("@/lib/actions/leads");
 const { deleteListAction, saveList } = await import("@/lib/actions/lists");
 const { logCallAction, undoCallAction } = await import("@/lib/actions/calls");
+const { checkImportPhones, importBatchAction } = await import("@/lib/actions/import");
 
 let close: () => Promise<void>;
 
@@ -199,5 +201,53 @@ describe("call actions", () => {
     if (!logged.ok) throw new Error(logged.error);
     await expect(undoCallAction({ callId: logged.callId, before: logged.before })).rejects.toThrow("NEXT_REDIRECT");
     expect(await mocks.db.select().from(calls)).toHaveLength(1);
+  });
+});
+
+describe("import actions", () => {
+  const raw = (phone: string, name: string) => ({
+    name,
+    company: "",
+    role: "",
+    phone,
+    email: "",
+    website: "",
+    country: "",
+    tags: "",
+    notes: "",
+  });
+  const batch = (rows: ReturnType<typeof raw>[]) => ({
+    listId: null,
+    defaultCountry: "GB",
+    fileName: "leads.csv",
+    rows,
+  });
+
+  it("imports a batch, checking every row again, and reports what happened", async () => {
+    await saveLead(initial, leadForm({ phone: "020 7946 0118" }));
+    const result = await importBatchAction(
+      batch([raw("020 7946 0001", "New one"), raw("020 7946 0118", "Duplicate"), raw("n/a", "No phone")]),
+    );
+    expect(result).toEqual({ ok: true, added: 1, duplicates: 1, doNotCall: 0, invalid: 1 });
+    const [lead] = await mocks.db.select().from(leads).where(eq(leads.name, "New one"));
+    expect(lead.source).toBe("Import: leads.csv");
+  });
+
+  it("checks which numbers are already in the CRM", async () => {
+    await saveLead(initial, leadForm({ phone: "020 7946 0118" }));
+    expect(await checkImportPhones(["+442079460118", "+442079460001"])).toEqual({ existing: 1, doNotCall: 0 });
+    expect(await checkImportPhones(["not a number"])).toBeNull();
+  });
+
+  it("rejects batches it can't read", async () => {
+    expect((await importBatchAction({ ...batch([]), defaultCountry: "gb" })).ok).toBe(false);
+    expect((await importBatchAction(batch(Array.from({ length: 501 }, (_, i) => raw(String(i), "x"))))).ok).toBe(false);
+  });
+
+  it("imports and checks nothing when nobody is signed in", async () => {
+    mocks.signedIn = false;
+    await expect(importBatchAction(batch([raw("020 7946 0001", "New one")]))).rejects.toThrow("NEXT_REDIRECT");
+    await expect(checkImportPhones(["+442079460118"])).rejects.toThrow("NEXT_REDIRECT");
+    expect(await mocks.db.select().from(leads)).toEqual([]);
   });
 });

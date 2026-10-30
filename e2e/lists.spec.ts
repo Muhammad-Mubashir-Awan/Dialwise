@@ -51,7 +51,7 @@ test("each list shows its counts and links to its leads", async ({ page }) => {
   // Leads, never called, calls, conversation rate, interested or booked.
   await expect(row.getByRole("cell")).toHaveText([name, "3", "1", "4", "50%", "1", /Rename/]);
 
-  await row.getByRole("link", { name }).click();
+  await row.getByRole("link", { name, exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/leads\\?list=${listId}$`));
   await expect(page.getByText(/^3 of \d+ leads$/)).toBeVisible();
 });

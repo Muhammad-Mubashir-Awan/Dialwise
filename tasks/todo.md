@@ -71,11 +71,12 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: integration test; e2e follow-up appears in Due Today
   - Files: src/lib/follow-ups.ts, src/lib/data/follow-ups.ts, src/app/(app)/follow-ups/, src/components/follow-ups-view.tsx, src/components/app-shell/nav-counts.tsx
   - Result: Overdue, Due today and Next 7 days, grouped on your own clock in the browser (the server sends the next 8 days). Do not call, not interested and bad number leads are left out; booked meetings show as Meeting with Open. Sidebar counts for Queue (ready now), Follow-ups (due today, red when overdue) and Leads. 240 unit/integration and 67 e2e tests.
-- [ ] Task: CSV import/export (slice 7)
+- [x] Task: CSV import/export (slice 7)
   - Acceptance: column mapping, validation, dedupe on E.164, DNC skip, 500-row chunks, summary; `/api/export` streams CSV
   - From the slice 4–5 review: validate imported time zones with `resolveTimeZone`. An unknown zone name in the database would break the local-time display (Intl throws on it).
   - Verify: 1,000-row import test with correct summary; export auth test
-  - Files: src/lib/csv.ts, src/lib/actions/import.ts, src/app/import/, src/app/api/export/route.ts
+  - Files: src/lib/csv.ts, src/lib/data/import.ts, src/lib/data/export.ts, src/lib/actions/import.ts, src/app/(app)/import/, src/components/import/, src/app/api/export/route.ts, public/lead-template.csv
+  - Result: 3 steps (upload, match columns, review counts) in the browser; the server checks every row again and saves batches of up to 500 rows and about 700 KB (server actions accept 1 MB). Duplicates are skipped by the database's unique phone number, so overlapping imports are safe; do-not-call leads are left untouched and counted. Time zones come from the country, never the file. Export streams leads or calls in batches of 1,000 with a byte-order mark for Excel, and cells that could run as formulas get a leading apostrophe. A downloadable template replaces the prototype's example file. 275 unit/integration and 75 e2e tests; the 1,000-row import gives the exact summary.
 - [ ] Task: `/review` + security-and-hardening pass on slices 6–7
 - [ ] Task: Stats (slice 8)
   - Acceptance: calls/day, connect rate, conversion by list and period
