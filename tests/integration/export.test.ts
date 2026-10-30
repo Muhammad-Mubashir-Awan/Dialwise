@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { sql } from "drizzle-orm";
 import { exportCsv } from "@/lib/data/export";
 import { calls, leads, lists } from "@/lib/db/schema";
 import { createTestDb, resetTestDb, type TestDb } from "../helpers/db";
@@ -115,5 +116,32 @@ describe("GET /api/export", () => {
   it("rejects an unknown type or list", async () => {
     expect((await GET(request("?type=everything"))).status).toBe(400);
     expect((await GET(request("?type=leads&list=nope"))).status).toBe(400);
+  });
+});
+
+describe("exportCsv with leads added together", () => {
+  it("writes each lead once when many share a timestamp finer than a millisecond", async () => {
+    // One import batch is one INSERT, so its leads share now() to the microsecond; JavaScript dates keep milliseconds.
+    await mocks.db.execute(sql`insert into leads (name, phone_e164, phone_raw, created_at) values
+      ('A', '+442079460001', 'x', '2026-10-01 09:00:00.123456+00'),
+      ('B', '+442079460002', 'x', '2026-10-01 09:00:00.123456+00'),
+      ('C', '+442079460003', 'x', '2026-10-01 09:00:00.123456+00'),
+      ('D', '+442079460004', 'x', '2026-10-01 09:00:00.123999+00')`);
+
+    // Read at most 20 chunks, so a stream that never ends fails the test instead of hanging it.
+    const reader = exportCsv(mocks.db, { type: "leads", listId: null, batchSize: 2 }).getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    for (let i = 0; i < 20; i++) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value);
+    }
+    const names = text
+      .trim()
+      .split("\r\n")
+      .slice(1)
+      .map((line) => line.split(",")[0]);
+    expect(names.sort()).toEqual(["A", "B", "C", "D"]);
   });
 });

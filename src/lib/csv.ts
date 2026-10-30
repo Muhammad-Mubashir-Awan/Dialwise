@@ -145,3 +145,15 @@ function csvCell(value: string | number | null | undefined): string {
 export function csvLine(values: (string | number | null | undefined)[]): string {
   return `${values.map(csvCell).join(",")}\r\n`;
 }
+
+/**
+ * The file's text. UTF-8 when the bytes are valid UTF-8 ("CSV UTF-8" in Excel, Google Sheets, most tools);
+ * otherwise Windows-1252, which Excel on Windows uses for plain "CSV", so names like Müller survive.
+ */
+export function decodeCsv(bytes: Uint8Array): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+}

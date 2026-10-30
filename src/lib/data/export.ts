@@ -46,9 +46,16 @@ const CALL_COLUMNS = [
 type Cursor = { at: Date; id: string } | null;
 type Batch = { lines: string; next: Cursor };
 
+/**
+ * Times cut to milliseconds. Postgres keeps microseconds but the cursor comes back as a JavaScript Date
+ * (milliseconds), and leads added in one import share a timestamp; comparing at the same precision is what
+ * keeps batches from repeating rows.
+ */
+const toMs = (time: AnyPgColumn) => sql`date_trunc('milliseconds', ${time})`;
+
 /** Rows after the cursor, ordered by (time, id), so batches never repeat or skip a row. */
 const after = (time: AnyPgColumn, id: AnyPgColumn, cursor: Cursor) =>
-  cursor ? sql`(${time}, ${id}) > (${cursor.at}, ${cursor.id})` : undefined;
+  cursor ? sql`(${toMs(time)}, ${id}) > (${cursor.at}, ${cursor.id})` : undefined;
 
 async function leadBatch(db: AppDatabase, listId: string | null, cursor: Cursor, limit: number): Promise<Batch> {
   const rows = await db
@@ -56,7 +63,7 @@ async function leadBatch(db: AppDatabase, listId: string | null, cursor: Cursor,
     .from(leads)
     .leftJoin(lists, eq(lists.id, leads.listId))
     .where(and(listId ? eq(leads.listId, listId) : undefined, after(leads.createdAt, leads.id, cursor)))
-    .orderBy(asc(leads.createdAt), asc(leads.id))
+    .orderBy(toMs(leads.createdAt), asc(leads.id))
     .limit(limit);
   const lines = rows
     .map(({ lead, listName }) =>
@@ -96,7 +103,7 @@ async function callBatch(db: AppDatabase, listId: string | null, cursor: Cursor,
     .innerJoin(leads, eq(leads.id, calls.leadId))
     .leftJoin(lists, eq(lists.id, leads.listId))
     .where(and(listId ? eq(leads.listId, listId) : undefined, after(calls.calledAt, calls.id, cursor)))
-    .orderBy(asc(calls.calledAt), asc(calls.id))
+    .orderBy(toMs(calls.calledAt), asc(calls.id))
     .limit(limit);
   const lines = rows
     .map(({ call, lead, listName }) =>

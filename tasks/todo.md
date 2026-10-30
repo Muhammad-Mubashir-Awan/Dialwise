@@ -77,7 +77,8 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: 1,000-row import test with correct summary; export auth test
   - Files: src/lib/csv.ts, src/lib/data/import.ts, src/lib/data/export.ts, src/lib/actions/import.ts, src/app/(app)/import/, src/components/import/, src/app/api/export/route.ts, public/lead-template.csv
   - Result: 3 steps (upload, match columns, review counts) in the browser; the server checks every row again and saves batches of up to 500 rows and about 700 KB (server actions accept 1 MB). Duplicates are skipped by the database's unique phone number, so overlapping imports are safe; do-not-call leads are left untouched and counted. Time zones come from the country, never the file. Export streams leads or calls in batches of 1,000 with a byte-order mark for Excel, and cells that could run as formulas get a leading apostrophe. A downloadable template replaces the prototype's example file. 275 unit/integration and 75 e2e tests; the 1,000-row import gives the exact summary.
-- [ ] Task: `/review` + security-and-hardening pass on slices 6–7
+- [x] Task: `/review` + security-and-hardening pass on slices 6–7
+  - Result: one critical bug fixed. Leads added in one import share a timestamp to the microsecond, but the export cursor is a JavaScript Date (milliseconds), so exports of more than one batch repeated rows and could stream forever; the cursor now compares at millisecond precision (test reproduces it). Also fixed: CSVs saved as plain "CSV" by Excel on Windows (Windows-1252) are now read correctly; security headers on every response (nosniff, frame denial, referrer and permissions policy, HSTS); a visible focus ring on Choose file. Mutation check: 12 of 12 rules caught. No rate limiting: single-user app behind Google sign-in.
 - [ ] Task: Stats (slice 8)
   - Acceptance: calls/day, connect rate, conversion by list and period
   - Verify: unit tests on aggregation; visual check against prototype
@@ -88,6 +89,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 
 ## Phase 4: Ship
 - [ ] Task: `/ship` checklist
+  - From the slice 6–7 security pass: add a Content-Security-Policy that limits scripts (needs a nonce per request from the proxy, which makes pages dynamic); today the policy only sets frame-ancestors, base-uri and object-src.
 - [ ] Task: Deploy (slice 9)
   - Acceptance: Vercel project, env vars, prod migration, prod OAuth redirect
   - Check: whether to add Vercel's `attachDatabasePool` (closes idle connections before a function sleeps). Left out in slice 4 because its dependency pulled in an old Zod with a known advisory.

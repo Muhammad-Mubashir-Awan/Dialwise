@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chunkRows, csvLine, guessMapping, parseCsv, planImport, rowsToRaw } from "@/lib/csv";
+import { chunkRows, csvLine, decodeCsv, guessMapping, parseCsv, planImport, rowsToRaw } from "@/lib/csv";
 
 describe("parseCsv", () => {
   it("reads the header and rows, handling quotes, commas and line breaks in cells", () => {
@@ -139,5 +139,19 @@ describe("csvLine", () => {
     expect(csvLine(['=HYPERLINK("http://x")', "+442079460118", "-5", "@SUM(A1)", "safe"])).toBe(
       '"\'=HYPERLINK(""http://x"")",\'+442079460118,\'-5,\'@SUM(A1),safe\r\n',
     );
+  });
+});
+
+describe("decodeCsv", () => {
+  it("reads UTF-8, the format of 'CSV UTF-8' in Excel and of most tools", () => {
+    expect(decodeCsv(new TextEncoder().encode("Name\nJosé Müller\n"))).toBe("Name\nJosé Müller\n");
+  });
+
+  it("falls back to Windows-1252, which Excel on Windows uses for plain 'CSV'", () => {
+    // "Müller" and "José" as Windows-1252 bytes (ü = 0xFC, é = 0xE9): not valid UTF-8.
+    const bytes = new Uint8Array([
+      0x4e, 0x61, 0x6d, 0x65, 0x0a, 0x4d, 0xfc, 0x6c, 0x6c, 0x65, 0x72, 0x0a, 0x4a, 0x6f, 0x73, 0xe9,
+    ]);
+    expect(decodeCsv(bytes)).toBe("Name\nMüller\nJosé");
   });
 });

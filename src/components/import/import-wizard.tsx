@@ -10,6 +10,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { checkImportPhones, importBatchAction } from "@/lib/actions/import";
 import {
   chunkRows,
+  decodeCsv,
   guessMapping,
   IMPORT_FIELDS,
   type ImportField,
@@ -55,7 +56,7 @@ export function ImportWizard({
       setFileError("That file is over 20 MB. Split it into smaller files.");
       return;
     }
-    const parsed = parseCsv(await picked.text());
+    const parsed = parseCsv(decodeCsv(new Uint8Array(await picked.arrayBuffer())));
     if (!parsed.ok) {
       setFileError(parsed.error);
       return;
@@ -69,6 +70,8 @@ export function ImportWizard({
     if (!file) return;
     setStep(3);
     setReview(null);
+    // Let "Checking…" show before the work: reading 10,000 numbers takes a moment.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const plan = planImport(rowsToRaw(file.rows, mapping), { defaultCountry: country, listId: listId || null });
     const counts = await checkImportPhones(plan.valid.map((v) => v.values.phoneE164));
     setReview({ plan, existing: counts?.existing ?? 0, doNotCall: counts?.doNotCall ?? 0 });
@@ -192,19 +195,26 @@ export function ImportWizard({
               One lead per row. A header row is needed. Up to 10,000 rows.
             </p>
             <div className="mt-1 flex flex-wrap justify-center gap-2">
-              <label htmlFor="import-file" className={cn(buttonVariants(), "cursor-pointer")}>
-                Choose file
-              </label>
+              {/* The real input is hidden; its focus ring shows on the label that looks like the button. */}
               <input
                 id="import-file"
                 type="file"
                 accept=".csv,text/csv"
-                className="sr-only"
+                className="peer sr-only"
                 onChange={(e) => {
                   void readFile(e.target.files?.[0]);
                   e.target.value = "";
                 }}
               />
+              <label
+                htmlFor="import-file"
+                className={cn(
+                  buttonVariants(),
+                  "cursor-pointer peer-focus-visible:border-ring peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
+                )}
+              >
+                Choose file
+              </label>
               <a href="/lead-template.csv" download className={buttonVariants({ variant: "outline" })}>
                 Download a template
               </a>
