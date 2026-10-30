@@ -26,6 +26,14 @@ Your keys go in `.env.local` in the project folder. That file is ignored by git,
    ALLOWED_EMAIL="the Gmail address you added as a test user"
    ```
 
+   To let someone else in (they sign in with their own Google account, so you never share yours), add their Gmail to the list and to **Audience → Test users** in Google:
+
+   ```
+   ALLOWED_EMAIL="you@gmail.com, friend@gmail.com"
+   ```
+
+   Everyone on the list sees and can change the same leads, lists and calls: it is one shared CRM.
+
 When the app goes live on Vercel (slice 9), you'll add the live address as a second origin and redirect URI in the same client.
 
 ## 2. Neon database
@@ -55,7 +63,7 @@ Open http://localhost:3000 → **Continue with Google** → pick the account fro
 | What you see | What to do |
 |---|---|
 | "Google sign-in isn't set up yet" | `AUTH_GOOGLE_ID` or `AUTH_GOOGLE_SECRET` is empty or mistyped in `.env.local`. Restart `npm run dev` after editing. |
-| "That account can't open this CRM" | The Google account isn't the one in `ALLOWED_EMAIL`, or `ALLOWED_EMAIL` is empty. |
+| "That account can't open this CRM" | The Google account isn't on the `ALLOWED_EMAIL` list, or the list is empty. |
 | Google says `redirect_uri_mismatch` | The redirect URI in the Google client must be exactly `http://localhost:3000/api/auth/callback/google`. |
 | Google says "Access blocked: app has not completed verification" | Add your Gmail under **Audience → Test users**. |
 | `DATABASE_URL is not set` | Step 2.4 above, then restart the dev server. |

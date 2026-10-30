@@ -45,6 +45,30 @@ describe("isAllowedEmail", () => {
     expect(isAllowedEmail(null, OWNER)).toBe(false);
     expect(isAllowedEmail(OWNER, undefined)).toBe(false);
   });
+
+  it("accepts any address on a comma, semicolon or space separated list, ignoring case and spaces", () => {
+    const list = " Owner@Example.com ,  friend@example.com;third@example.com fourth@example.com";
+    for (const email of ["owner@example.com", "FRIEND@example.com", "third@example.com", "fourth@example.com"]) {
+      expect(isAllowedEmail(email, list), email).toBe(true);
+    }
+  });
+
+  it("turns away addresses that are not on the list, including near misses", () => {
+    const list = "owner@example.com,friend@example.com";
+    for (const email of [
+      "stranger@example.com",
+      "friend@example.com.evil.test",
+      "xfriend@example.com",
+      "example.com",
+    ]) {
+      expect(isAllowedEmail(email, list), email).toBe(false);
+    }
+  });
+
+  it("lets nobody in when the list is empty or only separators", () => {
+    expect(isAllowedEmail(OWNER, " , ; ")).toBe(false);
+    expect(isAllowedEmail("", ",")).toBe(false);
+  });
 });
 
 describe("isPublicPath", () => {

@@ -4,9 +4,17 @@ const HOME = "/queue";
 
 const normalize = (email: string | null | undefined) => (email ?? "").trim().toLowerCase();
 
+/** The addresses allowed in: ALLOWED_EMAIL holds one, or several separated by commas, semicolons or spaces. */
+export function allowedEmails(allowedEmail: string | null | undefined): string[] {
+  return (allowedEmail ?? "")
+    .split(/[\s,;]+/)
+    .map(normalize)
+    .filter(Boolean);
+}
+
 export function isAllowedEmail(email: string | null | undefined, allowedEmail: string | null | undefined): boolean {
-  const allowed = normalize(allowedEmail);
-  return allowed !== "" && normalize(email) === allowed;
+  const address = normalize(email);
+  return address !== "" && allowedEmails(allowedEmail).includes(address);
 }
 
 type SignInAttempt = {
@@ -15,7 +23,7 @@ type SignInAttempt = {
   emailVerified: boolean | null | undefined;
 };
 
-/** Only the owner's verified Google account gets in; an unset ALLOWED_EMAIL lets nobody in. */
+/** Only a verified Google account on the allowed list gets in; an unset ALLOWED_EMAIL lets nobody in. */
 export function canSignIn(attempt: SignInAttempt, allowedEmail: string | null | undefined): boolean {
   return attempt.provider === "google" && attempt.emailVerified === true && isAllowedEmail(attempt.email, allowedEmail);
 }

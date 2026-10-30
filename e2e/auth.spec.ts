@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { STRANGER_STATE } from "./auth";
+import { FRIEND_STATE, STRANGER_STATE } from "./auth";
 
 test.describe("signed out", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -53,5 +53,16 @@ test.describe("signed in as the owner", () => {
     await expect(page).toHaveURL(/\/login$/);
     await page.goto("/queue");
     await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fqueue$/);
+  });
+});
+
+test.describe("signed in as a second allowed person", () => {
+  test.use({ storageState: FRIEND_STATE });
+
+  test("can use the app and the export, like the owner", async ({ page, request }) => {
+    await page.goto("/leads");
+    await expect(page).toHaveURL(/\/leads$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Leads" })).toBeVisible();
+    expect((await request.get("/api/export?type=leads")).status()).toBe(200);
   });
 });

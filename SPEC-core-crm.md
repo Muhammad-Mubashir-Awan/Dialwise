@@ -150,6 +150,7 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 - Tags on leads: yes (v1). Custom fields: no.
 - Per-lead time zone and call window: yes (v1).
 - UI: designed first as a clickable HTML prototype (clean and dense, Linear-like, keyboard-first, light and dark), approved before app code.
+- Access: `ALLOWED_EMAIL` may list several addresses; each person signs in with their own Google account and all share one set of data (one shared CRM, not per-user data). Separate per-user CRMs would need an owner on every table and were not chosen.
 - Database driver: node-postgres instead of Neon's HTTP driver (slice 4). It gives real transactions and lets e2e tests run on a local in-memory Postgres. Vercel's `attachDatabasePool` helper was left out for now: it pulls in an old Zod with a known advisory; revisit at deploy (slice 9).
 - A lead's status changes only through logged calls; the lead form edits contact details, list, tags, time zone and notes (slice 4, as in the prototype).
 - Queue call hours are checked in the app for each distinct time zone in use (the same code as the leads table), and the query then keeps leads in open zones, so it doesn't depend on the database's time zone data (slice 5).
