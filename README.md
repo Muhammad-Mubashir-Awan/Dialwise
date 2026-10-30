@@ -1,6 +1,6 @@
-# CRM Tool
+# Dialwise
 
-A personal CRM for cold calling: a call queue that respects each lead's local call hours, one-key outcome logging, follow-ups, call lists, CSV import/export and stats.
+A cold-calling CRM for working through leads without losing track. Each lead is called only inside their local hours, retries wait the gap you set, and every outcome is logged in one key press. Follow-ups never slip. Built with Next.js, Neon Postgres and Google sign-in.
 
 - What it does and why: [SPEC-core-crm.md](SPEC-core-crm.md)
 - Modules and build order (core, then pipeline, dialer, email + calendar): [CAPABILITY-MAP.md](CAPABILITY-MAP.md)
