@@ -3,6 +3,14 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { Pool } from "pg";
 import * as schema from "./schema";
 
+/**
+ * node-postgres treats sslmode=require as verify-full (it checks the server certificate) and warns that this will
+ * change in its next major version. Saying verify-full keeps today's behaviour and silences the warning.
+ */
+export function withExplicitSsl(url: string): string {
+  return url.replace(/([?&]sslmode=)(?:require|prefer|verify-ca)(?=&|$)/, "$1verify-full");
+}
+
 function createDb() {
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -11,7 +19,7 @@ function createDb() {
   // A small pool: one person uses the app, and Neon's pooled connection string does the heavy pooling.
   // DATABASE_POOL_MAX=1 is used by the e2e server, whose in-memory database has a single session.
   const pool = new Pool({
-    connectionString: url,
+    connectionString: withExplicitSsl(url),
     max: Number(process.env.DATABASE_POOL_MAX) || 3,
     idleTimeoutMillis: 5_000,
     // Neon's connection strings ask for channel binding; node-postgres only does it when told to (and only
