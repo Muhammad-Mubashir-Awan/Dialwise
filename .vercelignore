@@ -1,0 +1,7 @@
+.env*
+graphify-out
+design
+e2e
+tests
+tasks
+docs
