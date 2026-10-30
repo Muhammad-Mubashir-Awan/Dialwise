@@ -33,3 +33,6 @@ graphify-out/*
 
 # e2e sessions minted by e2e/global-setup.ts
 e2e/.auth/
+
+.vercel
+.env*
