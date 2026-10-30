@@ -1,10 +1,10 @@
 # Setting up CRM Tool on your machine
 
-You need two outside accounts: **Google Cloud** (for "Continue with Google") and **Neon** (the database, needed from slice 4). Both are free at this size. Menu names below match the consoles as of October 2026 and may move a little over time.
+You need two outside accounts: **Google Cloud** (for "Continue with Google") and **Neon** (the database). Both are free at this size. Menu names below match the consoles as of October 2026 and may move a little over time.
 
-Your keys go in `.env.local` in the project folder. That file is ignored by git, so it never leaves your machine. `AUTH_SECRET` is already filled in there.
+Your keys go in `.env.local` in the project folder. That file is ignored by git, so it never leaves your machine. `AUTH_SECRET` is already filled in there. Paste keys straight into the file, not into a chat.
 
-## 1. Google sign-in (needed now)
+## 1. Google sign-in
 
 1. Open https://console.cloud.google.com and sign in with the Google account you'll use for the CRM.
 2. Create a project: project picker at the top → **New project** → name it `CRM Tool` → **Create**, then select it.
@@ -25,27 +25,30 @@ Your keys go in `.env.local` in the project folder. That file is ignored by git,
    AUTH_GOOGLE_SECRET="the client secret"
    ALLOWED_EMAIL="the Gmail address you added as a test user"
    ```
-7. Start the app and sign in:
-   ```bash
-   npm run dev
-   ```
-   Open http://localhost:3000 → **Continue with Google**. Any other Google account is turned away.
 
 When the app goes live on Vercel (slice 9), you'll add the live address as a second origin and redirect URI in the same client.
 
-## 2. Neon database (needed from slice 4)
+## 2. Neon database
 
 1. Sign up at https://neon.tech (signing in with Google is fine).
 2. **Create project**: name `crm-tool`, Postgres version as offered, and the region closest to you (Vercel will be put in the same region later).
-3. On the project dashboard → **Connect** → keep the *Pooled connection* option → copy the connection string (starts with `postgresql://`).
+3. On the project dashboard → **Connect** → keep the *Pooled connection* option → copy the connection string (starts with `postgresql://`, ends with something like `?sslmode=require&channel_binding=require`). Keep the whole string.
 4. Paste it into `.env.local`:
    ```
    DATABASE_URL="postgresql://…"
    ```
-5. Create the tables:
+5. Create the tables (this also adds the default settings: call hours 09:00–18:00 Monday to Friday, 24-hour retry gap, UK as the default country):
    ```bash
    npm run db:migrate
    ```
+
+## 3. Start the app and sign in
+
+```bash
+npm run dev
+```
+
+Open http://localhost:3000 → **Continue with Google** → pick the account from `ALLOWED_EMAIL`. Any other Google account is turned away. Restart `npm run dev` whenever you change `.env.local`.
 
 ## If something goes wrong
 
@@ -56,3 +59,6 @@ When the app goes live on Vercel (slice 9), you'll add the live address as a sec
 | Google says `redirect_uri_mismatch` | The redirect URI in the Google client must be exactly `http://localhost:3000/api/auth/callback/google`. |
 | Google says "Access blocked: app has not completed verification" | Add your Gmail under **Audience → Test users**. |
 | `DATABASE_URL is not set` | Step 2.4 above, then restart the dev server. |
+| `password authentication failed` or `getaddrinfo ENOTFOUND` | The connection string is incomplete or mistyped. Copy it again from Neon's **Connect** dialog, including the part after `?`. |
+| A "SECURITY WARNING: The SSL modes 'prefer', 'require' … are treated as aliases for 'verify-full'" message | Harmless. The database driver checks Neon's certificate fully, which is stricter than the connection string asks for. |
+| `relation "leads" does not exist` | The tables aren't there yet: run `npm run db:migrate`. |

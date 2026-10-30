@@ -14,6 +14,9 @@ function createDb() {
     connectionString: url,
     max: Number(process.env.DATABASE_POOL_MAX) || 3,
     idleTimeoutMillis: 5_000,
+    // Neon's connection strings ask for channel binding; node-postgres only does it when told to (and only
+    // when the server offers it, so the e2e test database is unaffected).
+    enableChannelBinding: true,
   });
   return drizzle({ client: pool, schema });
 }
