@@ -84,6 +84,8 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Verify: unit tests on aggregation; visual check against prototype
   - Files: src/lib/stats.ts, src/lib/data/stats.ts, src/components/stats/, src/app/(app)/stats/
   - Result: last 7 or 30 days, with the period before for comparison: four headline figures, calls per day, outcomes and a row per list. The chart also shows as a table. Checked by eye in light, dark and at phone width, which found axis text shrinking to about 5px on a phone, so the chart is now drawn at its real width.
+- [x] Task: `/review` of Stats and Settings
+  - Result: four bugs fixed, each reproduced in a browser first and each with a regression test. A just-logged call went missing from Stats because the page clock can lag by 30 seconds; two open Settings pages could silently undo each other; a failed save replaced the whole page, now it says so and can retry, and there is an error page for the signed-in app; an edit made before the form was live was never saved. Still open from that review: tests for the meetings count and the by-list sort, and the Stats download size.
 - [x] Task: Settings page
   - Acceptance: edit call window, call days, retry gap, default country
   - Files: src/app/(app)/settings/, src/components/settings/settings-form.tsx, src/lib/settings-input.ts, src/lib/actions/settings.ts

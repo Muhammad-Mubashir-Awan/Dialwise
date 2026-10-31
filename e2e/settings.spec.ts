@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Route, test } from "@playwright/test";
 import { open } from "./app";
 import { resetSettings, seedLead, unique } from "./db";
 
@@ -102,6 +102,69 @@ test("at least one call day has to stay on", async ({ page }) => {
   await page.reload();
   await formReady(page);
   await expect(day(page, "Fri")).toBeChecked();
+});
+
+test("an edit made before the form is live still counts", async ({ page }) => {
+  await open(page, "/settings");
+  await until(page).fill("08:00");
+  await until(page).blur();
+  await formReady(page);
+  await expect(status(page)).toHaveText(/^Not saved/);
+  await expect(page.getByText("Must be later than the start time.")).toBeVisible();
+});
+
+test("two pages can't silently undo each other's changes", async ({ page, context }) => {
+  await openSettings(page);
+  const other = await context.newPage();
+  await openSettings(other);
+
+  await retryGap(other).fill("48");
+  await retryGap(other).blur();
+  await expect(status(other)).toHaveText(/^Saved at /);
+
+  await country(page).selectOption("US");
+  await expect(status(page)).toHaveText(/someone else just changed/i);
+
+  await page.getByRole("button", { name: "Reload" }).click();
+  await formReady(page);
+  await expect(retryGap(page)).toHaveValue("48");
+  await expect(country(page)).toHaveValue("GB");
+});
+
+test("several quick changes in a row all save", async ({ page }) => {
+  await openSettings(page);
+  for (const name of ["Sat", "Sun"]) await day(page, name).check();
+  await day(page, "Mon").uncheck();
+  await expect(status(page)).toHaveText(/^Saved at /);
+  await page.reload();
+  await formReady(page);
+  await expect(day(page, "Sun")).toBeChecked();
+  await expect(day(page, "Mon")).not.toBeChecked();
+});
+
+test("a lost connection says so and can try again", async ({ page }) => {
+  await openSettings(page);
+  const block = (route: Route) => (route.request().method() === "POST" ? route.abort() : route.continue());
+  await page.route("**/settings", block);
+  await retryGap(page).fill("48");
+  await retryGap(page).blur();
+  await expect(status(page)).toHaveText(/^Couldn't save/);
+  await expect(retryGap(page)).toHaveValue("48");
+
+  await page.unroute("**/settings", block);
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(status(page)).toHaveText(/^Saved at /);
+  await page.reload();
+  await formReady(page);
+  await expect(retryGap(page)).toHaveValue("48");
+});
+
+test("saving after the session has ended goes to sign-in", async ({ page, context }) => {
+  await openSettings(page);
+  await context.clearCookies();
+  await retryGap(page).fill("48");
+  await retryGap(page).blur();
+  await expect(page).toHaveURL(/\/login/);
 });
 
 test.describe("on a phone", () => {

@@ -6,7 +6,7 @@ import { CallsChart } from "@/components/stats/calls-chart";
 import { useNow } from "@/components/times";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OUTCOME_META } from "@/lib/outcomes";
-import { change, type Stats, type StatsCall, summarize } from "@/lib/stats";
+import { change, changeText, type Stats, type StatsCall, summarize } from "@/lib/stats";
 
 const PERIODS = [7, 30] as const;
 
@@ -27,11 +27,13 @@ function Tile({
   label,
   value,
   delta,
+  earlierCalls,
   days,
 }: {
   label: string;
   value: string;
   delta: ReturnType<typeof change>;
+  earlierCalls: number;
   days: number;
 }) {
   const tone =
@@ -40,11 +42,7 @@ function Tile({
     <div className="flex flex-col gap-1 rounded-lg border bg-card px-4 py-3.5">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-2xl font-semibold tracking-tight tabular-nums">{value}</span>
-      <span className={`font-mono text-xs ${tone}`}>
-        {delta
-          ? `${delta.percent > 0 ? "+" : ""}${delta.percent}% vs previous ${days} days`
-          : "no earlier data to compare"}
-      </span>
+      <span className={`font-mono text-xs ${tone}`}>{changeText(delta, earlierCalls, days)}</span>
     </div>
   );
 }
@@ -99,12 +97,11 @@ function ByList({ rows }: { rows: Stats["byList"] }) {
 export function StatsView({ calls, lists }: { calls: StatsCall[]; lists: string[] }) {
   const now = useNow();
   const [days, setDays] = useState<(typeof PERIODS)[number]>(7);
-  // Recalculate when the day changes or the period does, not on every tick of the shared clock.
-  const dayKey = now ? `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}` : null;
+  // Only the date matters, so this recalculates when the day changes, not on every tick of the shared clock.
+  const today = now ? new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() : null;
   const stats = useMemo(
-    () => (now ? summarize(calls, { now, days, lists }) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [calls, lists, days, dayKey],
+    () => (today === null ? null : summarize(calls, { now: new Date(today), days, lists })),
+    [calls, lists, days, today],
   );
 
   const { totals, previous } = stats ?? {};
@@ -147,24 +144,28 @@ export function StatsView({ calls, lists }: { calls: StatsCall[]; lists: string[
               label="Calls"
               value={totals.calls.toLocaleString("en-GB")}
               delta={change(totals.calls, previous.calls)}
+              earlierCalls={previous.calls}
               days={days}
             />
             <Tile
               label="Conversation rate"
               value={percent(totals.rate)}
               delta={change(totals.rate, previous.rate)}
+              earlierCalls={previous.calls}
               days={days}
             />
             <Tile
               label="Interested or booked"
               value={String(totals.won)}
               delta={change(totals.won, previous.won)}
+              earlierCalls={previous.calls}
               days={days}
             />
             <Tile
               label="Meetings booked"
               value={String(totals.meetings)}
               delta={change(totals.meetings, previous.meetings)}
+              earlierCalls={previous.calls}
               days={days}
             />
           </div>

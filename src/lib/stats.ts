@@ -65,6 +65,7 @@ export function summarize(
   const start = periodStart(now, days);
   const previousStart = periodStart(new Date(start), days + 1);
   const startDate = new Date(start);
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
 
   const totals = emptyTotals();
   const previous = emptyTotals();
@@ -81,7 +82,8 @@ export function summarize(
       add(previous, call.outcome);
       continue;
     }
-    if (call.at < start || call.at > now.getTime()) continue;
+    // Up to the end of today rather than "now": the page's clock can lag behind a call that was only just logged.
+    if (call.at < start || call.at >= endOfToday) continue;
 
     add(totals, call.outcome);
     counts[call.outcome] += 1;
@@ -114,6 +116,12 @@ export function change(
   if (!previous) return null;
   const percent = Math.round(((current - previous) / previous) * 100);
   return { percent, direction: percent > 0 ? "up" : percent < 0 ? "down" : "flat" };
+}
+
+/** The comparison as words. `earlierCalls` tells a figure that was zero apart from having no earlier data at all. */
+export function changeText(delta: ReturnType<typeof change>, earlierCalls: number, days: number): string {
+  if (delta) return `${delta.percent > 0 ? "+" : ""}${delta.percent}% vs previous ${days} days`;
+  return earlierCalls ? `0 in previous ${days} days` : "no earlier data to compare";
 }
 
 const SCALE_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];

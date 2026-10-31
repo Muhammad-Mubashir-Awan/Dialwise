@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CallOutcome } from "@/lib/db/schema";
-import { change, niceScale, periodStart, type StatsCall, summarize } from "@/lib/stats";
+import { change, changeText, niceScale, periodStart, type StatsCall, summarize } from "@/lib/stats";
 
 // A Tuesday afternoon, on whatever clock the test machine keeps.
 const NOW = new Date(2026, 9, 20, 14, 30);
@@ -33,7 +33,7 @@ describe("summarize totals", () => {
     expect(summary([]).totals).toEqual({ calls: 0, conversations: 0, rate: 0, won: 0, meetings: 0 });
   });
 
-  it("leaves out calls before the period and after now", () => {
+  it("leaves out calls before the period and after today", () => {
     const stats = summary([call(day(7)), call(day(30)), call(day(-1)), call(day(0))]);
     expect(stats.totals.calls).toBe(1);
   });
@@ -42,6 +42,16 @@ describe("summarize totals", () => {
     const stats = summary([call(day(0)), call(day(8), "interested"), call(day(13)), call(day(14))]);
     expect(stats.totals.calls).toBe(1);
     expect(stats.previous).toMatchObject({ calls: 2, conversations: 1, won: 1 });
+  });
+});
+
+describe("a call newer than the page's clock", () => {
+  it("still counts: the clock on the page can lag a call that was only just logged", () => {
+    const justLogged = NOW.getTime() + 20_000;
+    const stats = summary([call(justLogged, "interested", 0)], 7, ["Dentists"]);
+    expect(stats.totals.calls).toBe(1);
+    expect(stats.series.at(-1)?.calls).toBe(1);
+    expect(stats.byList[0].calls).toBe(1);
   });
 });
 
@@ -119,6 +129,23 @@ describe("change", () => {
 
   it("says nothing when there is no earlier figure to compare with", () => {
     expect(change(5, 0)).toBeNull();
+  });
+});
+
+describe("changeText", () => {
+  it("gives the change against the period before", () => {
+    expect(changeText(change(12, 10), 40, 7)).toBe("+20% vs previous 7 days");
+    expect(changeText(change(8, 10), 40, 30)).toBe("-20% vs previous 30 days");
+    expect(changeText(change(10, 10), 40, 7)).toBe("0% vs previous 7 days");
+  });
+
+  it("says the earlier figure was zero when there were calls then", () => {
+    expect(changeText(change(3, 0), 50, 7)).toBe("0 in previous 7 days");
+    expect(changeText(change(0, 0), 50, 7)).toBe("0 in previous 7 days");
+  });
+
+  it("only says there is no earlier data when there were no earlier calls", () => {
+    expect(changeText(change(3, 0), 0, 7)).toBe("no earlier data to compare");
   });
 });
 

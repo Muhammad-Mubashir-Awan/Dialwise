@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Route, test } from "@playwright/test";
 import { open } from "./app";
 import { seedCall, seedLead, seedList, unique } from "./db";
 
@@ -22,6 +22,20 @@ test("create, rename and delete a list", async ({ page }) => {
   await page.getByRole("button", { name: "Delete list" }).click();
   await expect(page.getByText(`Deleted ${renamed}`)).toBeVisible();
   await expect(page.getByRole("link", { name: renamed, exact: true })).toBeHidden();
+});
+
+test("a failed request shows an error page that can recover", async ({ page }) => {
+  await open(page, "/lists");
+  const block = (route: Route) => (route.request().method() === "POST" ? route.abort() : route.continue());
+  await page.route("**/lists", block);
+  await page.getByRole("button", { name: "New list" }).click();
+  await page.getByLabel("List name").fill(`Lost ${unique()}`);
+  await page.getByRole("button", { name: "Create list" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Something went wrong" })).toBeVisible();
+
+  await page.unroute("**/lists", block);
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Lists" })).toBeVisible();
 });
 
 test("a list name that's already used is refused", async ({ page }) => {

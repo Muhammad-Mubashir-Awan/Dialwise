@@ -73,6 +73,24 @@ test("pointing at a day shows its calls", async ({ page, isMobile }) => {
   await expect(page.getByText(/^\d+ calls?$/)).toBeVisible();
 });
 
+test("a call logged moments ago is counted when you go straight to Stats", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the sidebar is a menu on phones");
+  const name = `Stats ${unique()}`;
+  const lead = await seedLead({ name: `Amelia ${unique()}`, listId: await seedList(name) });
+  await open(page, "/leads");
+  // Long enough for the page's shared clock to be behind the call below.
+  await page.waitForTimeout(2000);
+  await seedCall(lead.id, "interested", new Date());
+  await page.getByRole("link", { name: "Stats" }).click();
+  await expect(page.getByRole("row").filter({ hasText: name }).getByRole("cell")).toHaveText([
+    name,
+    "1",
+    "100.0%",
+    "1",
+    "0",
+  ]);
+});
+
 test("fits the screen on a phone", async ({ page }) => {
   await seedCalls();
   await page.setViewportSize({ width: 375, height: 812 });

@@ -1,6 +1,8 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef } from "react";
+import { startTransition, useActionState, useEffect, useEffectEvent, useRef } from "react";
+import { unstable_rethrow } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -9,7 +11,7 @@ import type { Settings } from "@/lib/db/schema";
 import type { CountryOption } from "@/lib/phone";
 import type { SettingsField } from "@/lib/settings-input";
 
-const INITIAL: SettingsFormState = { errors: {} };
+type FormState = SettingsFormState & { failed?: boolean };
 
 // Monday first, as the week reads; the values are 0 = Sunday … 6 = Saturday.
 const DAYS = [
@@ -22,7 +24,20 @@ const DAYS = [
   [0, "Sun"],
 ] as const;
 
-const snapshot = (form: HTMLFormElement) => JSON.stringify([...new FormData(form)]);
+/** The same text for the same settings, whichever order the fields come in. */
+const fingerprint = (entries: [string, FormDataEntryValue][]) =>
+  JSON.stringify(entries.map(([name, value]) => `${name}=${value}`).sort());
+
+const fingerprintOfForm = (form: HTMLFormElement) => fingerprint([...new FormData(form)]);
+
+const fingerprintOfSettings = (settings: Settings) =>
+  fingerprint([
+    ["callWindowStart", settings.callWindowStart.slice(0, 5)],
+    ["callWindowEnd", settings.callWindowEnd.slice(0, 5)],
+    ...settings.callDays.map((day): [string, string] => ["callDays", String(day)]),
+    ["retryGapHours", String(settings.retryGapHours)],
+    ["defaultCountry", settings.defaultCountry],
+  ]);
 
 function Panel({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -33,6 +48,16 @@ function Panel({ id, title, children }: { id: string; title: string; children: R
       <div className="flex flex-col gap-3.5 p-4">{children}</div>
     </section>
   );
+}
+
+/** After the session ends, a save gets redirected to sign-in, which looks just like a failed request. */
+async function sessionEnded() {
+  try {
+    const page = await fetch(window.location.href, { method: "HEAD", redirect: "manual" });
+    return page.type === "opaqueredirect";
+  } catch {
+    return false;
+  }
 }
 
 export function SettingsForm({
@@ -46,24 +71,36 @@ export function SettingsForm({
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   // What the server last got, so leaving a field without changing it doesn't save.
-  const lastSent = useRef("");
-  const [state, formAction, pending] = useActionState(saveSettings, INITIAL);
-
-  useEffect(() => {
-    const form = formRef.current;
-    if (!form) return;
-    lastSent.current = snapshot(form);
-    // Tells browser tests the form is live, so they don't type before it can save.
-    form.dataset.ready = "true";
-  }, []);
+  const lastSent = useRef(fingerprintOfSettings(settings));
+  const [state, formAction, pending] = useActionState(
+    async (prev: FormState, data: FormData): Promise<FormState> => {
+      try {
+        return await saveSettings(prev, data);
+      } catch (error) {
+        unstable_rethrow(error); // Being sent to sign-in isn't a failure.
+        if (await sessionEnded()) window.location.reload();
+        lastSent.current = ""; // So the same values can be sent again.
+        return { errors: {}, version: prev.version, failed: true };
+      }
+    },
+    { errors: {}, version: settings.updatedAt.getTime() },
+  );
 
   const save = () => {
     const form = formRef.current;
-    if (!form || snapshot(form) === lastSent.current) return;
-    lastSent.current = snapshot(form);
+    if (!form || fingerprintOfForm(form) === lastSent.current) return;
+    lastSent.current = fingerprintOfForm(form);
     const data = new FormData(form);
     startTransition(() => formAction(data));
   };
+
+  const saveEarlyEdits = useEffectEvent(save);
+  useEffect(() => {
+    // A change made before the form was live never reached the handlers, so it's picked up here.
+    saveEarlyEdits();
+    // Tells browser tests the form is live, so they don't type before it can save.
+    if (formRef.current) formRef.current.dataset.ready = "true";
+  }, []);
   // Typed fields save when you leave them or press Enter, not on every key.
   const saveOnEnter = (e: React.KeyboardEvent) => {
     if (e.key !== "Enter") return;
@@ -71,7 +108,7 @@ export function SettingsForm({
     save();
   };
 
-  const { errors, savedAt } = state;
+  const { errors, savedAt, conflict, failed } = state;
   const fieldProps = (name: SettingsField) => ({
     id: `settings-${name}`,
     name,
@@ -83,14 +120,18 @@ export function SettingsForm({
 
   const status = pending
     ? "Saving…"
-    : Object.keys(errors).length > 0
-      ? "Not saved. Fix the field marked above."
-      : savedAt
-        ? `Saved at ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
-        : "Changes save as you make them.";
+    : conflict
+      ? "Not saved: someone else just changed these settings. Reload to see them."
+      : failed
+        ? "Couldn't save. Check your connection and try again."
+        : Object.keys(errors).length > 0
+          ? "Not saved. Fix the field marked above."
+          : savedAt
+            ? `Saved at ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
+            : "Changes save as you make them.";
 
   return (
-    <form ref={formRef} noValidate className="flex max-w-160 flex-col gap-4">
+    <form ref={formRef} noValidate autoComplete="off" className="flex max-w-160 flex-col gap-4">
       <Panel id="settings-call-hours" title="Call hours">
         <p className="text-[13px] text-muted-foreground">
           The queue only serves leads whose local time is inside these hours. Leads with an unknown time zone are always
@@ -207,9 +248,21 @@ export function SettingsForm({
         </p>
       </Panel>
 
-      <p role="status" className="text-xs text-muted-foreground">
-        {status}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p role="status" className="text-xs text-muted-foreground">
+          {status}
+        </p>
+        {!pending && conflict && (
+          <Button type="button" variant="outline" size="sm" onClick={() => window.location.reload()}>
+            Reload
+          </Button>
+        )}
+        {!pending && failed && !conflict && (
+          <Button type="button" variant="outline" size="sm" onClick={save}>
+            Try again
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

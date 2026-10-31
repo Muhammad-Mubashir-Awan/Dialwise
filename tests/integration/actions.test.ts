@@ -219,8 +219,10 @@ describe("saveSettings", () => {
     return data;
   };
 
+  const loaded = async () => ({ errors: {}, version: (await getSettings(mocks.db)).updatedAt.getTime() });
+
   it("saves the settings and refreshes the page", async () => {
-    const state = await saveSettings(initial, settingsForm());
+    const state = await saveSettings(await loaded(), settingsForm());
     expect(state.savedAt).toEqual(expect.any(Number));
     expect(state.errors).toEqual({});
     expect(await getSettings(mocks.db)).toMatchObject({
@@ -234,7 +236,7 @@ describe("saveSettings", () => {
   });
 
   it("saves nothing while any field is wrong", async () => {
-    const state = await saveSettings(initial, settingsForm({ callWindowEnd: "07:00", retryGapHours: "48" }));
+    const state = await saveSettings(await loaded(), settingsForm({ callWindowEnd: "07:00", retryGapHours: "48" }));
     expect(state.errors).toEqual({ callWindowEnd: "Must be later than the start time." });
     expect(state.savedAt).toBeUndefined();
     expect(await getSettings(mocks.db)).toMatchObject({ callWindowStart: "09:00:00", retryGapHours: 24 });
@@ -242,13 +244,30 @@ describe("saveSettings", () => {
   });
 
   it("needs a call day", async () => {
-    const state = await saveSettings(initial, settingsForm({}, []));
+    const state = await saveSettings(await loaded(), settingsForm({}, []));
     expect(state.errors.callDays).toBe("Pick at least one day.");
+  });
+
+  it("refuses a page that loaded before someone else's change", async () => {
+    const stale = await loaded();
+    await saveSettings(stale, settingsForm({ retryGapHours: "72" }));
+    mocks.refresh.mockClear();
+    const state = await saveSettings(stale, settingsForm({ defaultCountry: "IE" }));
+    expect(state.conflict).toBe(true);
+    expect(state.savedAt).toBeUndefined();
+    expect(await getSettings(mocks.db)).toMatchObject({ retryGapHours: 72, defaultCountry: "US" });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it.each([[Number.NaN], [-1], [1e20], [undefined]])("treats the version %s as out of date", async (version) => {
+    const state = await saveSettings({ errors: {}, version: version as number }, settingsForm());
+    expect(state.conflict).toBe(true);
+    expect(await getSettings(mocks.db)).toMatchObject({ retryGapHours: 24 });
   });
 
   it("refuses when signed out", async () => {
     mocks.signedIn = false;
-    await expect(saveSettings(initial, settingsForm())).rejects.toThrow("NEXT_REDIRECT");
+    await expect(saveSettings(await loaded(), settingsForm())).rejects.toThrow("NEXT_REDIRECT");
     expect(await getSettings(mocks.db)).toMatchObject({ retryGapHours: 24 });
   });
 });
