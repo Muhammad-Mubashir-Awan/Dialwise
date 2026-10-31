@@ -54,6 +54,8 @@ export const leads = pgTable(
     /** Job title, e.g. "Founder". */
     role: text("role"),
     company: text("company"),
+    /** What the company does, e.g. "Dentistry". */
+    industry: text("industry"),
     phoneE164: text("phone_e164").notNull().unique(),
     /** The number as it was entered or imported. */
     phoneRaw: text("phone_raw").notNull(),

@@ -26,6 +26,7 @@ export type FormLead = {
   id: string;
   name: string;
   role: string | null;
+  industry: string | null;
   company: string | null;
   /** International format, e.g. "+44 20 7946 0118". */
   phone: string;
@@ -136,6 +137,16 @@ function LeadForm({
             autoComplete="off"
           />
           {error("role")}
+        </Field>
+        <Field data-invalid={!!errors.industry}>
+          <FieldLabel htmlFor="lead-industry">Industry</FieldLabel>
+          <Input
+            {...fieldProps("industry")}
+            defaultValue={lead?.industry ?? ""}
+            placeholder="e.g. Dentistry"
+            autoComplete="off"
+          />
+          {error("industry")}
         </Field>
         <Field data-invalid={!!errors.email}>
           <FieldLabel htmlFor="lead-email">Email</FieldLabel>
@@ -262,4 +273,15 @@ function LeadForm({
   );
 }
 
-const FIELD_ORDER: LeadField[] = ["name", "company", "role", "email", "phone", "listId", "website", "tags", "notes"];
+const FIELD_ORDER: LeadField[] = [
+  "name",
+  "company",
+  "role",
+  "industry",
+  "email",
+  "phone",
+  "listId",
+  "website",
+  "tags",
+  "notes",
+];

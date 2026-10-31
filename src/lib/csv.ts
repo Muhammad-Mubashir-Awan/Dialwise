@@ -10,6 +10,7 @@ export const IMPORT_FIELDS = [
   ["name", "Name"],
   ["company", "Company"],
   ["role", "Role"],
+  ["industry", "Industry"],
   ["phone", "Phone"],
   ["email", "Email"],
   ["website", "Website"],
@@ -45,6 +46,7 @@ function guessField(header: string): ImportField {
   if (/phone|tel|mobile|cell|number/.test(h)) return "phone";
   if (/e-?mail/.test(h)) return "email";
   if (/web|url|site|domain/.test(h)) return "website";
+  if (/industry|sector|vertical/.test(h)) return "industry";
   if (/business|company|organi[sz]ation|firm|account/.test(h)) return "company";
   if (/title|role|position|job/.test(h)) return "role";
   if (/name|contact|person/.test(h)) return "name";
@@ -75,6 +77,7 @@ export function rowsToRaw(rows: string[][], mapping: ImportField[]): RawImportLe
       name: values("name").join(" "),
       company: first("company"),
       role: first("role"),
+      industry: first("industry"),
       phone: first("phone"),
       email: first("email"),
       website: first("website"),

@@ -57,6 +57,10 @@ describe("guessMapping", () => {
     ).toEqual(["company", "name", "role", "phone", "email", "website", "country", "tags", "notes", "ignore"]);
   });
 
+  it.each(["Industry", "industry", "Sector", "Business sector", "Vertical"])("reads %s as the industry", (header) => {
+    expect(guessMapping([header])).toEqual(["industry"]);
+  });
+
   it("maps first and last name columns to the name", () => {
     expect(guessMapping(["First name", "Last name", "Phone number"])).toEqual(["name", "name", "phone"]);
   });
@@ -74,6 +78,7 @@ describe("rowsToRaw", () => {
       name: "Amelia Hart",
       company: "",
       role: "",
+      industry: "",
       phone: "07700 900123",
       email: "",
       website: "",
@@ -94,6 +99,7 @@ describe("planImport", () => {
     name: "Lead",
     company: "",
     role: "",
+    industry: "",
     phone,
     email: "",
     website: "",

@@ -24,6 +24,7 @@ const values = (overrides: Partial<LeadValues> = {}): LeadValues => {
   return {
     name: "Amelia Hart",
     role: null,
+    industry: null,
     company: null,
     phoneRaw: "020 7946 0118",
     phoneE164: `+44207946${String(phoneSeq).padStart(4, "0")}`,

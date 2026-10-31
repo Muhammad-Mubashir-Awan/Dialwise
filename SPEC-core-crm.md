@@ -9,7 +9,7 @@ A hosted, single-user web app for managing cold-calling prospects when selling a
 **Success looks like:** from "next lead" to "outcome logged" in under 10 seconds and 3 clicks, and no follow-up is ever forgotten.
 
 ### Features (v1)
-1. **Leads**: create/edit/delete leads (name, company, phone, country, time zone, email, website, notes, source, tags, status). Leads span multiple countries; phones are stored as E.164.
+1. **Leads**: create/edit/delete leads (name, company, industry, phone, country, time zone, email, website, notes, source, tags, status). Leads span multiple countries; phones are stored as E.164.
 2. **Call queue**: "Next lead" view that serves the next lead to call.
    - Priority: due follow-ups, then never-called, then oldest last-call.
    - Skips leads outside their local call window (default 09:00–18:00, Mon–Fri, configurable).
@@ -91,7 +91,7 @@ tasks/                → plan.md and todo.md
 
 ## Data Model
 - `lists`: id uuid, name, created_at
-- `leads`: id, list_id → lists (nullable, set null when the list is deleted), name, role (job title, shown in the prototype), company, phone_e164 (unique, checked as `+` and 8–15 digits), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
+- `leads`: id, list_id → lists (nullable, set null when the list is deleted), name, role (job title, shown in the prototype), company, industry (free text), phone_e164 (unique, checked as `+` and 8–15 digits), phone_raw, country (ISO-2), timezone (IANA, defaulted from the phone's country when it maps to one zone), email, website, notes, source, tags text[], status, last_called_at, next_follow_up_at, created_at, updated_at
   - Indexes: status, list_id, next_follow_up_at, last_called_at, GIN(tags)
 - `calls`: id, lead_id → leads (cascade), outcome, note, follow_up_at, called_at, channel (`manual` | `dialer`, default `manual`), duration_sec (nullable), external_id (nullable; the provider's call id, set by `dialer`)
 - `settings` (single row, id = 1, seeded by migration): call_window_start (09:00), call_window_end (18:00, must be after start), call_days (0 = Sun … 6 = Sat; default Mon–Fri), retry_gap_hours (1–168, default 24), default_country (default GB)

@@ -53,6 +53,7 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
             id: lead.id,
             name: lead.name,
             role: lead.role,
+            industry: lead.industry,
             company: lead.company,
             phone,
             country: lead.country,
@@ -116,6 +117,8 @@ async function LeadDetail({ params }: { params: PageProps<"/leads/[id]">["params
                     <span className="text-muted-foreground">Unknown</span>
                   )}
                 </dd>
+                <dt>Industry</dt>
+                <dd>{lead.industry ?? <None />}</dd>
                 <dt>Email</dt>
                 <dd>
                   {lead.email ? (

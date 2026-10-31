@@ -142,11 +142,13 @@ test("edit a lead", async ({ page, isMobile }) => {
   await expect(dialog.getByLabel("Company")).toHaveValue("Ledgerly");
   await dialog.getByLabel("Company").fill("Ledgerly Ltd");
   await dialog.getByLabel("Role").fill("CEO");
+  await dialog.getByLabel("Industry").fill("Accounting software");
   await dialog.getByRole("button", { name: "Save changes" }).click();
 
   await expect(page.getByText("Lead saved")).toBeVisible();
   await expect(dialog).toBeHidden();
   await expect(page.getByText("CEO at Ledgerly Ltd")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Details" })).toContainText("Accounting software");
 });
 
 test("a lead's page shows its call history, newest first", async ({ page }) => {

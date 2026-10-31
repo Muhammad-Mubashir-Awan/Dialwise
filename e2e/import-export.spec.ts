@@ -6,6 +6,25 @@ async function upload(page: Page, name: string, csv: string) {
   await page.locator("#import-file").setInputFiles({ name, mimeType: "text/csv", buffer: Buffer.from(csv) });
 }
 
+test("an Industry column is matched, imported and exported", async ({ page, request }) => {
+  const listName = `Industry ${unique()}`;
+  const listId = await seedList(listName);
+  const name = `Amelia ${unique()}`;
+  await open(page, "/import");
+  await page.getByLabel("Add leads to").selectOption(listId);
+  await upload(page, "industry.csv", `Name,Mobile,Industry\n${name},${randomUkPhone().local},Dentistry\n`);
+  await expect(page.getByLabel("Import Industry as")).toHaveValue("industry");
+  await page.getByRole("button", { name: "Review import" }).click();
+  await page.getByRole("button", { name: /^Import \d+ lead/ }).click();
+
+  await page.getByRole("link", { name, exact: true }).click();
+  await expect(page.getByRole("region", { name: "Details" })).toContainText("Dentistry");
+
+  const exported = await (await request.get(`/api/export?type=leads&list=${listId}`)).text();
+  expect(exported).toContain("Industry");
+  expect(exported).toContain("Dentistry");
+});
+
 test("import a CSV: match columns, review what will happen, then land on the list", async ({ page }) => {
   const listName = `Import ${unique()}`;
   const listId = await seedList(listName);

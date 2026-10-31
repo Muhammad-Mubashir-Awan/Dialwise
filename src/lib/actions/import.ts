@@ -20,6 +20,7 @@ const RawRow = z.object({
   name: text(1_000),
   company: text(1_000),
   role: text(1_000),
+  industry: text(1_000),
   phone: text(100),
   email: text(1_000),
   website: text(2_000),

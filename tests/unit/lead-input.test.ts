@@ -6,6 +6,7 @@ const LIST_ID = "6f1c2a4e-8b0d-4c3e-9f7a-1b2c3d4e5f60";
 const form = (overrides: Record<string, string> = {}) => ({
   name: "Amelia Hart",
   role: "",
+  industry: "",
   company: "",
   phone: "020 7946 0118",
   country: "GB",
@@ -26,6 +27,7 @@ describe("parseLeadForm", () => {
       values: {
         name: "Amelia Hart",
         role: null,
+        industry: null,
         company: null,
         phoneRaw: "020 7946 0118",
         phoneE164: "+442079460118",
@@ -45,6 +47,7 @@ describe("parseLeadForm", () => {
       form({
         name: "  Amelia Hart ",
         role: " Founder ",
+        industry: " Dentistry ",
         company: " Brightpath ",
         email: " amelia@brightpath.example ",
         website: " brightpath.example ",
@@ -56,6 +59,7 @@ describe("parseLeadForm", () => {
     expect(result.ok && result.values).toMatchObject({
       name: "Amelia Hart",
       role: "Founder",
+      industry: "Dentistry",
       company: "Brightpath",
       email: "amelia@brightpath.example",
       website: "brightpath.example",
@@ -167,6 +171,7 @@ describe("parseImportRow", () => {
     name: "",
     company: "",
     role: "",
+    industry: "",
     phone: "",
     email: "",
     website: "",
@@ -174,6 +179,17 @@ describe("parseImportRow", () => {
     tags: "",
     notes: "",
     ...fields,
+  });
+
+  it("keeps the industry, trimmed and cut to length", () => {
+    const options = { defaultCountry: "GB", listId: null };
+    const read = (industry: string) => {
+      const result = parseImportRow(row({ name: "Amelia", phone: "020 7946 0118", industry }), options);
+      return result.ok ? result.values.industry : "refused";
+    };
+    expect(read("  Dentistry ")).toBe("Dentistry");
+    expect(read("   ")).toBeNull();
+    expect(read("x".repeat(300))).toHaveLength(200);
   });
 
   it("builds a lead in the chosen list, with country and time zone from the number", () => {
@@ -184,6 +200,7 @@ describe("parseImportRow", () => {
       values: {
         name: "Amelia Hart",
         role: null,
+        industry: null,
         company: null,
         phoneRaw: "020 7946 0118",
         phoneE164: "+442079460118",

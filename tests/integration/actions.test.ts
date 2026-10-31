@@ -277,6 +277,7 @@ describe("import actions", () => {
     name,
     company: "",
     role: "",
+    industry: "",
     phone,
     email: "",
     website: "",

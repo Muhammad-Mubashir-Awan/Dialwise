@@ -23,6 +23,7 @@ const raw = (phone: string, name = "Lead", more: Partial<RawImportLead> = {}): R
   name,
   company: "",
   role: "",
+  industry: "",
   phone,
   email: "",
   website: "",

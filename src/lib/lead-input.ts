@@ -35,6 +35,7 @@ export function websiteHref(value: string): string | null {
 const LeadForm = z.object({
   name: text(200).min(1, "Enter the person's name."),
   role: optional(200),
+  industry: optional(200),
   company: optional(200),
   phone: text(50).min(1, "Enter a phone number."),
   country: z.string().trim().toUpperCase(),
@@ -66,6 +67,7 @@ const LEAD_FIELDS = Object.keys(LeadForm.shape) as LeadField[];
 export type LeadValues = {
   name: string;
   role: string | null;
+  industry: string | null;
   company: string | null;
   phoneRaw: string;
   phoneE164: string;
@@ -101,12 +103,13 @@ export function parseLeadForm(input: Record<string, unknown>): LeadFormResult {
   }
   if (!result.success || !phone) return { ok: false, errors };
 
-  const { name, role, company, email, website, listId, tags, notes } = result.data;
+  const { name, role, industry, company, email, website, listId, tags, notes } = result.data;
   return {
     ok: true,
     values: {
       name,
       role,
+      industry,
       company,
       phoneRaw: result.data.phone,
       phoneE164: phone.e164,
@@ -126,6 +129,7 @@ export type RawImportLead = {
   name: string;
   company: string;
   role: string;
+  industry: string;
   phone: string;
   email: string;
   website: string;
@@ -173,6 +177,7 @@ export function parseImportRow(
     values: {
       name: clip(raw.name, 200) ?? clip(raw.company, 200) ?? "Unnamed lead",
       role: clip(raw.role, 200),
+      industry: clip(raw.industry, 200),
       company: clip(raw.company, 200),
       phoneRaw: raw.phone.trim().slice(0, 50),
       phoneE164: phone.e164,

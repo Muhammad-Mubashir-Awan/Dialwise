@@ -68,7 +68,7 @@ describe("exportCsv", () => {
     await seed();
     const text = await read(exportCsv(mocks.db, { type: "leads", listId: null, batchSize: 2 }));
     const lines = text.split("\r\n");
-    expect(text.startsWith("﻿Name,Company,Role,Phone,")).toBe(true);
+    expect(text.startsWith("﻿Name,Company,Role,Industry,Phone,")).toBe(true);
     expect(lines.slice(1, 4).map((l) => l.split(",")[0])).toEqual(["Priya Nair", "Marcus Reid", "Amelia Hart"]);
     expect(lines[1]).toContain(',\'+12125550142,(212) 555-0142,US,,,,Dentists,"dental, warm",Interested,');
     expect(lines[1]).toContain('"\'=HYPERLINK(""http://evil.example"")"');
