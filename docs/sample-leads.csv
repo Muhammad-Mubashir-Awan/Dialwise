@@ -1,0 +1,21 @@
+Name,Company,Role,Phone,Email,Website,Country,Tags,Notes
+Olivia Bennett,Northgate Dental,Practice manager,020 7946 0101,olivia@northgatedental.example,northgatedental.example,GB,"dental, warm",Asked to call back after the refit
+Tom Whitfield,Brightline Logistics,Operations lead,0161 496 0123,tom@brightlinelogistics.example,brightlinelogistics.example,GB,"logistics, cold",Found on LinkedIn
+Sophie Clarke,Harper and Rowe Accountants,Partner,0113 496 0145,sophie@harperrowe.example,harperrowe.example,GB,accounting,Two offices in Yorkshire
+Daniel Okafor,Vantage Fitness,Owner,0151 496 0122,,vantagefitness.example,GB,"fitness, gatekeeper",No email found for this one
+Isla Fraser,Castle Row Interiors,Director,0131 496 0160,isla@castlerow.example,,GB,interiors,Showroom in Edinburgh
+Marcus Webb,Southgate Plumbing,Owner,0117 496 0177,marcus@southgateplumbing.example,southgateplumbing.example,UK,"trades, cold",Country written as UK rather than GB on purpose
+Ruth Adeyemi,Orchard Tea Rooms,,0121 496 0188,hello@orchardtea.example,orchardtea.example,GB,hospitality,Two tea rooms in Birmingham
+,Clearview Windows,Sales manager,0141 496 0190,sales@clearviewwindows.example,clearviewwindows.example,GB,trades,No contact name - the company name is used instead
+Nadia Hassan,Pennine Pet Clinic,Practice owner,020 7946 0115,nadia@penninepet.example,penninepet.example,,"vet, warm",No country given - your default country is used
+Priya Raman,Lumen Health,Head of growth,+1 212 555 0101,priya@lumenhealth.example,lumenhealth.example,US,"saas, warm",Met at a conference in March
+Jordan Ellis,Midway Supply Co,Buyer,+1 312 555 0114,jordan@midwaysupply.example,midwaysupply.example,US,wholesale,Warehouse in Chicago
+Alex Moreno,Foundry Labs,CTO,+1 415 555 0127,alex@foundrylabs.example,foundrylabs.example,US,"saas, technical",Wants a technical demo first
+Rachel Kim,Harbor Point Realty,Agent,+1 206 555 0133,rachel@harborpoint.example,harborpoint.example,US,"property, cold",Waterfront listings in Seattle
+Carlos Duarte,Sunline Travel,Founder,+1 305 555 0148,carlos@sunlinetravel.example,sunlinetravel.example,US,travel,"Busy season is winter, so call early"
+Megan Doyle,Lakeshore Legal,Office manager,+1 416 555 0152,megan@lakeshorelegal.example,lakeshorelegal.example,CA,legal,"Toronto, three partners"
+Ryan Chu,Cedar Peak Outdoors,Buyer,+1 604 555 0165,ryan@cedarpeak.example,cedarpeak.example,CA,retail,Store in Vancouver
+Hannah Reid,Bayside Veterinary,Practice owner,+61 2 5550 1234,hannah@baysidevet.example,baysidevet.example,AU,"vet, warm",Clinic in Sydney
+Liam Novak,Southbank Printworks,Sales lead,+61 3 5550 1255,liam@southbankprint.example,southbankprint.example,AU,printing,Melbourne
+Grace Oyelaran,Nimbus Software,Founder,+61 491 570 006,grace@nimbussoftware.example,nimbussoftware.example,AU,saas,Brisbane
+Oliver Bennett,Northgate Dental,Owner,020 7946 0101,oliver@northgatedental.example,northgatedental.example,GB,dental,Same number as the first row on purpose - counted as a repeat

@@ -7,6 +7,7 @@ A cold-calling CRM for working through leads without losing track. Each lead is 
 - Plan and task list: [tasks/plan.md](tasks/plan.md), [tasks/todo.md](tasks/todo.md)
 - Approved UI prototype and design tokens: [design/](design/)
 - First-time setup (Google sign-in, Neon database): [docs/SETUP.md](docs/SETUP.md)
+- Sample leads for trying the import: [docs/sample-leads.csv](docs/sample-leads.csv) (all numbers are reserved for fiction, so nothing can call a real person)
 
 ## Stack
 Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS 4 + shadcn/ui, Neon Postgres + Drizzle (node-postgres driver), Auth.js with Google, Zod, libphonenumber-js, Vitest and Playwright.
