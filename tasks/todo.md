@@ -79,10 +79,11 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Result: 3 steps (upload, match columns, review counts) in the browser; the server checks every row again and saves batches of up to 500 rows and about 700 KB (server actions accept 1 MB). Duplicates are skipped by the database's unique phone number, so overlapping imports are safe; do-not-call leads are left untouched and counted. Time zones come from the country, never the file. Export streams leads or calls in batches of 1,000 with a byte-order mark for Excel, and cells that could run as formulas get a leading apostrophe. A downloadable template replaces the prototype's example file. 275 unit/integration and 75 e2e tests; the 1,000-row import gives the exact summary.
 - [x] Task: `/review` + security-and-hardening pass on slices 6–7
   - Result: one critical bug fixed. Leads added in one import share a timestamp to the microsecond, but the export cursor is a JavaScript Date (milliseconds), so exports of more than one batch repeated rows and could stream forever; the cursor now compares at millisecond precision (test reproduces it). Also fixed: CSVs saved as plain "CSV" by Excel on Windows (Windows-1252) are now read correctly; security headers on every response (nosniff, frame denial, referrer and permissions policy, HSTS); a visible focus ring on Choose file. Mutation check: 12 of 12 rules caught. No rate limiting: single-user app behind Google sign-in.
-- [ ] Task: Stats (slice 8)
+- [x] Task: Stats (slice 8)
   - Acceptance: calls/day, connect rate, conversion by list and period
   - Verify: unit tests on aggregation; visual check against prototype
-  - Files: src/lib/stats.ts, src/app/stats/
+  - Files: src/lib/stats.ts, src/lib/data/stats.ts, src/components/stats/, src/app/(app)/stats/
+  - Result: last 7 or 30 days, with the period before for comparison: four headline figures, calls per day, outcomes and a row per list. The chart also shows as a table. Checked by eye in light, dark and at phone width, which found axis text shrinking to about 5px on a phone, so the chart is now drawn at its real width.
 - [x] Task: Settings page
   - Acceptance: edit call window, call days, retry gap, default country
   - Files: src/app/(app)/settings/, src/components/settings/settings-form.tsx, src/lib/settings-input.ts, src/lib/actions/settings.ts

@@ -159,6 +159,7 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 - Undo removes the lead's latest call and restores its status and times, within 15 minutes of logging (slice 5).
 - Time zones per country come from the server's built-in ICU data. A lead's zone is guessed when its country keeps one time (or has one main zone, e.g. Spain → Madrid); otherwise it stays unknown until picked in the form.
 - Settings save field by field as you change them, with no Save button (slice 8). A typed field saves when you leave it or press Enter; menus and day checkboxes save at once. If any field is wrong the whole form is refused, so the saved settings are never half-updated. Everyone on the allowed list shares one set of settings.
+- Stats are worked out in the browser, like follow-ups: the server sends the last 62 days of calls (time, outcome, list) and the browser groups them by its own days, since the server doesn't know your time zone (slice 8). Calls are counted under the list their lead is in now, so moving a lead moves its history; a deleted lead's calls are gone from stats. The "no conversation" bars use a neutral grey on purpose: it clears 3:1 against the card in both themes and stays distinct from the teal, though the palette validator's categorical lightness and chroma rules don't accept a grey.
 
 ## Open Questions
 None for v1.
