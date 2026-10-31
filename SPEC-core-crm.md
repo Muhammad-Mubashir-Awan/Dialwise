@@ -158,6 +158,7 @@ Conventions: files kebab-case, components PascalCase, functions camelCase, DB co
 - Follow-ups and the sidebar's "due today" count are grouped in the browser, on your own clock: the server doesn't know your time zone, so it sends the next 8 days of follow-ups (slice 6).
 - Undo removes the lead's latest call and restores its status and times, within 15 minutes of logging (slice 5).
 - Time zones per country come from the server's built-in ICU data. A lead's zone is guessed when its country keeps one time (or has one main zone, e.g. Spain → Madrid); otherwise it stays unknown until picked in the form.
+- Settings save field by field as you change them, with no Save button (slice 8). A typed field saves when you leave it or press Enter; menus and day checkboxes save at once. If any field is wrong the whole form is refused, so the saved settings are never half-updated. Everyone on the allowed list shares one set of settings.
 
 ## Open Questions
 None for v1.

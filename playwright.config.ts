@@ -18,8 +18,16 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "desktop", testIgnore: "settings.spec.ts", use: { ...devices["Desktop Chrome"] } },
+    { name: "mobile", testIgnore: "settings.spec.ts", use: { ...devices["Pixel 7"] } },
+    // Saved settings change what every other test sees, so these run one at a time, after all the others.
+    {
+      name: "settings",
+      testMatch: "settings.spec.ts",
+      dependencies: ["desktop", "mobile"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: [
     {

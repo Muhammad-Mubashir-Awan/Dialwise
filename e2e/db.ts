@@ -31,6 +31,14 @@ async function query<T extends pg.QueryResultRow>(text: string, values: unknown[
   }
 }
 
+/** Puts the settings back to the migration's defaults. */
+export async function resetSettings() {
+  await query(
+    `update settings set call_window_start = '09:00', call_window_end = '18:00',
+       call_days = '{1,2,3,4,5}', retry_gap_hours = 24, default_country = 'GB'`,
+  );
+}
+
 export async function seedList(name: string): Promise<string> {
   const [row] = await query<{ id: string }>("insert into lists (name) values ($1) returning id", [name]);
   return row.id;

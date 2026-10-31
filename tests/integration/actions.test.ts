@@ -23,6 +23,8 @@ const { deleteLeadAction, saveLead } = await import("@/lib/actions/leads");
 const { deleteListAction, saveList } = await import("@/lib/actions/lists");
 const { logCallAction, undoCallAction } = await import("@/lib/actions/calls");
 const { checkImportPhones, importBatchAction } = await import("@/lib/actions/import");
+const { saveSettings } = await import("@/lib/actions/settings");
+const { getSettings } = await import("@/lib/data/settings");
 
 let close: () => Promise<void>;
 
@@ -201,6 +203,53 @@ describe("call actions", () => {
     if (!logged.ok) throw new Error(logged.error);
     await expect(undoCallAction({ callId: logged.callId, before: logged.before })).rejects.toThrow("NEXT_REDIRECT");
     expect(await mocks.db.select().from(calls)).toHaveLength(1);
+  });
+});
+
+describe("saveSettings", () => {
+  const settingsForm = (fields: Record<string, string> = {}, days = ["1", "6"]) => {
+    const data = formData({
+      callWindowStart: "08:30",
+      callWindowEnd: "17:00",
+      retryGapHours: "48",
+      defaultCountry: "US",
+      ...fields,
+    });
+    for (const day of days) data.append("callDays", day);
+    return data;
+  };
+
+  it("saves the settings and refreshes the page", async () => {
+    const state = await saveSettings(initial, settingsForm());
+    expect(state.savedAt).toEqual(expect.any(Number));
+    expect(state.errors).toEqual({});
+    expect(await getSettings(mocks.db)).toMatchObject({
+      callWindowStart: "08:30:00",
+      callWindowEnd: "17:00:00",
+      callDays: [1, 6],
+      retryGapHours: 48,
+      defaultCountry: "US",
+    });
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("saves nothing while any field is wrong", async () => {
+    const state = await saveSettings(initial, settingsForm({ callWindowEnd: "07:00", retryGapHours: "48" }));
+    expect(state.errors).toEqual({ callWindowEnd: "Must be later than the start time." });
+    expect(state.savedAt).toBeUndefined();
+    expect(await getSettings(mocks.db)).toMatchObject({ callWindowStart: "09:00:00", retryGapHours: 24 });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("needs a call day", async () => {
+    const state = await saveSettings(initial, settingsForm({}, []));
+    expect(state.errors.callDays).toBe("Pick at least one day.");
+  });
+
+  it("refuses when signed out", async () => {
+    mocks.signedIn = false;
+    await expect(saveSettings(initial, settingsForm())).rejects.toThrow("NEXT_REDIRECT");
+    expect(await getSettings(mocks.db)).toMatchObject({ retryGapHours: 24 });
   });
 });
 

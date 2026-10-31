@@ -83,9 +83,13 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Acceptance: calls/day, connect rate, conversion by list and period
   - Verify: unit tests on aggregation; visual check against prototype
   - Files: src/lib/stats.ts, src/app/stats/
-- [ ] Task: Settings page
+- [x] Task: Settings page
   - Acceptance: edit call window, call days, retry gap, default country
-  - Files: src/app/settings/, src/lib/actions/settings.ts
+  - Files: src/app/(app)/settings/, src/components/settings/settings-form.tsx, src/lib/settings-input.ts, src/lib/actions/settings.ts
+  - Result: each field saves on its own as you change it; nothing is saved while any field is wrong. `parseSettingsForm`
+    checks the whole form, so an end time at or before the start, an empty day list, a retry gap outside 1-168 hours or an
+    unknown country all say why and leave the saved settings alone. The browser tests run last and one at a time (the
+    `settings` project), because saved settings change what every other test sees.
 
 ## Phase 4: Ship
 - [ ] Task: `/ship` checklist
