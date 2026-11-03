@@ -14,7 +14,7 @@ Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS 4 + shadcn/u
 
 ## Commands
 ```bash
-npm install          # install dependencies (Node 24+)
+npm install          # install dependencies (Node 24)
 npm run dev          # dev server on http://localhost:3000
 npm run check        # lint + typecheck + format check + unit and integration tests
 npm run test:e2e     # production build + Playwright (desktop and phone)
