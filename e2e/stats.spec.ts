@@ -50,9 +50,9 @@ test("the chart is also available as a table, one row per day", async ({ page })
   await panel.getByRole("button", { name: "Show as table" }).click();
   await expect(panel.getByRole("row")).toHaveCount(8); // the header and 7 days
   await expect(panel.getByRole("columnheader")).toHaveText(["Day", "Calls", "Conversations", "No conversation"]);
-  // Today is first, and our three calls are in it.
-  const today = panel.getByRole("row").nth(1);
-  expect(Number(await today.getByRole("cell").nth(1).innerText())).toBeGreaterThanOrEqual(3);
+  // Our three calls are in there, whether on one day or either side of midnight.
+  const counts = await panel.getByRole("row").locator("td:nth-child(2)").allInnerTexts();
+  expect(counts.reduce((sum, n) => sum + Number(n), 0)).toBeGreaterThanOrEqual(3);
 
   await panel.getByRole("button", { name: "Show chart" }).click();
   await expect(page.getByRole("img", { name: /^Calls per day/ })).toBeVisible();

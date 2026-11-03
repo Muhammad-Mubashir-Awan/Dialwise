@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { checkImportPhones, importBatchAction } from "@/lib/actions/import";
+import { sessionEnded } from "@/lib/session-ended";
 import {
   chunkRows,
   decodeCsv,
@@ -66,6 +67,15 @@ export function ImportWizard({
     setStep(2);
   }
 
+  /** A request that didn't come back: either the session ended (go and sign in) or the connection dropped. */
+  async function requestFailed(what: string) {
+    if (await sessionEnded()) {
+      window.location.reload();
+      return;
+    }
+    toast.error(`${what} Check your connection, then try again.`);
+  }
+
   async function startReview() {
     if (!file) return;
     setStep(3);
@@ -73,8 +83,13 @@ export function ImportWizard({
     // Let "Checking…" show before the work: reading 10,000 numbers takes a moment.
     await new Promise((resolve) => setTimeout(resolve, 0));
     const plan = planImport(rowsToRaw(file.rows, mapping), { defaultCountry: country, listId: listId || null });
-    const counts = await checkImportPhones(plan.valid.map((v) => v.values.phoneE164));
-    setReview({ plan, existing: counts?.existing ?? 0, doNotCall: counts?.doNotCall ?? 0 });
+    try {
+      const counts = await checkImportPhones(plan.valid.map((v) => v.values.phoneE164));
+      setReview({ plan, existing: counts?.existing ?? 0, doNotCall: counts?.doNotCall ?? 0 });
+    } catch {
+      setStep(2);
+      await requestFailed("Couldn't check the file.");
+    }
   }
 
   async function runImport() {
@@ -83,12 +98,19 @@ export function ImportWizard({
     let added = 0;
     setProgress({ done: 0, total: rows.length });
     for (const batch of chunkRows(rows, { maxRows: 500, maxBytes: 700_000 })) {
-      const result = await importBatchAction({
-        listId: listId || null,
-        defaultCountry: country,
-        fileName: file.name,
-        rows: batch,
-      });
+      let result: Awaited<ReturnType<typeof importBatchAction>>;
+      try {
+        result = await importBatchAction({
+          listId: listId || null,
+          defaultCountry: country,
+          fileName: file.name,
+          rows: batch,
+        });
+      } catch {
+        setProgress(null);
+        await requestFailed(added ? `The import stopped after ${added} leads.` : "Nothing was imported.");
+        return;
+      }
       if (!result.ok) {
         setProgress(null);
         toast.error(added ? `${result.error} ${added} leads were imported before this.` : result.error);

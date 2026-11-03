@@ -185,7 +185,7 @@ export function CallsChart({ series }: { series: DayPoint[] }) {
                 aria-hidden="true"
                 className="pointer-events-none absolute top-0 z-10 w-max -translate-x-1/2 rounded-md border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-md"
                 style={{
-                  left: `clamp(70px, ${((MARGIN.left + hover * slot + slot / 2) / W) * 100}%, calc(100% - 70px))`,
+                  left: `clamp(110px, ${((MARGIN.left + hover * slot + slot / 2) / W) * 100}%, calc(100% - 110px))`,
                 }}
               >
                 <strong className="block font-medium">{longDay.format(hovered.day)}</strong>

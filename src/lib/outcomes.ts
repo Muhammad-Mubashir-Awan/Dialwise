@@ -41,6 +41,9 @@ export const CONVERSATION_OUTCOMES: CallOutcome[] = [
 /** Statuses that count as a win in lists and stats. */
 export const WON_STATUSES: LeadStatus[] = ["interested", "meeting_booked"];
 
+/** Outcomes that count as a win in stats. */
+export const WON_OUTCOMES: CallOutcome[] = ["interested", "meeting_booked"];
+
 /** Statuses that take a lead out of the queue. A booked meeting still shows in Follow-ups. */
 export const CLOSED_STATUSES: LeadStatus[] = ["meeting_booked", "not_interested", "do_not_call", "bad_number"];
 

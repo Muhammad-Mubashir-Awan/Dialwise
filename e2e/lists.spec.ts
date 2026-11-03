@@ -38,6 +38,15 @@ test("a failed request shows an error page that can recover", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1, name: "Lists" })).toBeVisible();
 });
 
+test("a save after the session has ended goes to sign-in, then back", async ({ page, context }) => {
+  await open(page, "/lists");
+  await page.getByRole("button", { name: "New list" }).click();
+  await page.getByLabel("List name").fill(`Late ${unique()}`);
+  await context.clearCookies();
+  await page.getByRole("button", { name: "Create list" }).click();
+  await expect(page).toHaveURL(/\/login\?callbackUrl=%2Flists$/);
+});
+
 test("a list name that's already used is refused", async ({ page }) => {
   const name = `Agencies ${unique()}`;
   await seedList(name);

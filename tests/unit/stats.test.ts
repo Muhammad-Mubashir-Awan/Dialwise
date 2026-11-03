@@ -55,6 +55,18 @@ describe("a call newer than the page's clock", () => {
   });
 });
 
+describe("summarize counts", () => {
+  it("counts only booked meetings as meetings", () => {
+    const stats = summary([
+      call(day(0), "interested"),
+      call(day(1), "interested"),
+      call(day(2), "callback"),
+      call(day(3), "meeting_booked"),
+    ]);
+    expect(stats.totals).toMatchObject({ meetings: 1, won: 3, conversations: 4 });
+  });
+});
+
 describe("summarize series", () => {
   it("gives one point per day, oldest first, with empty days at zero", () => {
     const stats = summary([call(day(0)), call(day(0), "interested"), call(day(3))]);
@@ -107,6 +119,15 @@ describe("summarize by list", () => {
       { name: "Dentists", calls: 3, conversations: 2, rate: 2 / 3, won: 2, meetings: 1 },
       { name: "Agencies", calls: 1, conversations: 0, rate: 0, won: 0, meetings: 0 },
     ]);
+  });
+
+  it("sorts by calls even when the busiest list comes last in the names", () => {
+    const stats = summary(
+      [call(day(0), "no_answer", 0), call(day(0), "no_answer", 1), call(day(1), "no_answer", 1)],
+      7,
+      lists,
+    );
+    expect(stats.byList.map((r) => r.name)).toEqual(["Agencies", "Dentists"]);
   });
 
   it("gathers calls to leads with no list under one row", () => {

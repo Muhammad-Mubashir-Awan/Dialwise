@@ -1,10 +1,36 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 import { open } from "./app";
 import { randomUkPhone, seedCall, seedLead, seedList, unique } from "./db";
 
 async function upload(page: Page, name: string, csv: string) {
   await page.locator("#import-file").setInputFiles({ name, mimeType: "text/csv", buffer: Buffer.from(csv) });
 }
+
+test("reviewing an import after the session has ended goes to sign-in", async ({ page, context }) => {
+  await open(page, "/import");
+  await upload(page, "late.csv", `Name,Mobile\nLate,${randomUkPhone().local}\n`);
+  await context.clearCookies();
+  await page.getByRole("button", { name: "Review import" }).click();
+  await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fimport$/);
+});
+
+test("a dropped connection during an import says so and lets you try again", async ({ page }) => {
+  await open(page, "/import");
+  await upload(page, "dropped.csv", `Name,Mobile\nDropped,${randomUkPhone().local}\n`);
+  const block = (route: Route) => (route.request().method() === "POST" ? route.abort() : route.continue());
+  await page.route("**/import", block);
+
+  await page.getByRole("button", { name: "Review import" }).click();
+  await expect(page.getByText("Couldn't check the file. Check your connection, then try again.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Review import" })).toBeVisible();
+
+  await page.unroute("**/import", block);
+  await page.getByRole("button", { name: "Review import" }).click();
+  await page.route("**/import", block);
+  await page.getByRole("button", { name: /^Import \d+ lead/ }).click();
+  await expect(page.getByText("Nothing was imported. Check your connection, then try again.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Import \d+ lead/ })).toBeEnabled();
+});
 
 test("an Industry column is matched, imported and exported", async ({ page, request }) => {
   const listName = `Industry ${unique()}`;

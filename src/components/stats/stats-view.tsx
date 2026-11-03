@@ -78,8 +78,9 @@ function ByList({ rows }: { rows: Stats["byList"] }) {
           </tr>
         </thead>
         <tbody className="[&>tr:last-child>td]:border-b-0 [&>tr>td]:h-10 [&>tr>td]:border-b [&>tr>td]:px-3 [&>tr>td.num]:text-right [&>tr>td.num]:font-mono [&>tr>td.num]:tabular-nums">
-          {rows.map((row) => (
-            <tr key={row.name}>
+          {/* By position, because a list can itself be called "No list". */}
+          {rows.map((row, i) => (
+            <tr key={i}>
               <td className="font-medium">{row.name}</td>
               <td className="num">{row.calls}</td>
               <td className="num">{percent(row.rate)}</td>

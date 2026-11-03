@@ -9,6 +9,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { saveSettings, type SettingsFormState } from "@/lib/actions/settings";
 import type { Settings } from "@/lib/db/schema";
 import type { CountryOption } from "@/lib/phone";
+import { sessionEnded } from "@/lib/session-ended";
 import type { SettingsField } from "@/lib/settings-input";
 
 type FormState = SettingsFormState & { failed?: boolean };
@@ -48,16 +49,6 @@ function Panel({ id, title, children }: { id: string; title: string; children: R
       <div className="flex flex-col gap-3.5 p-4">{children}</div>
     </section>
   );
-}
-
-/** After the session ends, a save gets redirected to sign-in, which looks just like a failed request. */
-async function sessionEnded() {
-  try {
-    const page = await fetch(window.location.href, { method: "HEAD", redirect: "manual" });
-    return page.type === "opaqueredirect";
-  } catch {
-    return false;
-  }
 }
 
 export function SettingsForm({

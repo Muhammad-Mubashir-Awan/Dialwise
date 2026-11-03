@@ -3,7 +3,7 @@
  * browser decides where "today" starts, since only the browser knows its time zone.
  */
 import { CALL_OUTCOMES, type CallOutcome } from "@/lib/db/schema";
-import { CONVERSATION_OUTCOMES, WON_STATUSES } from "@/lib/outcomes";
+import { CONVERSATION_OUTCOMES, WON_OUTCOMES } from "@/lib/outcomes";
 
 /** One logged call. `list` is the index into the `lists` names, or -1 when the lead has no list. */
 export type StatsCall = { at: number; outcome: CallOutcome; list: number };
@@ -26,8 +26,7 @@ const NO_LIST = "No list";
 const DAY = 86_400_000;
 
 const isConversation = (outcome: CallOutcome) => CONVERSATION_OUTCOMES.includes(outcome);
-// "Interested or booked" counts calls, so it uses the outcomes that give a lead those two statuses.
-const isWin = (outcome: CallOutcome) => (WON_STATUSES as string[]).includes(outcome);
+const isWin = (outcome: CallOutcome) => WON_OUTCOMES.includes(outcome);
 
 /** Midnight at the start of the first day of a period of `days` days that ends today. */
 export function periodStart(now: Date, days: number): number {
