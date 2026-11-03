@@ -40,7 +40,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
   - Result: no blockers. Fixed during review: the proxy only reads the session cookie (NextAuth's proxy wrapper re-sends it on every request, which could undo sign-out). Sessions last 30 days from sign-in. Mutation check: dropping the verified-email rule fails a test.
 
 ### Checkpoint: foundation
-- [ ] Owner has set `.env.local` (Neon, Google OAuth, AUTH_SECRET, ALLOWED_EMAIL) and can sign in locally
+- [x] Owner has set `.env.local` (Neon, Google OAuth, AUTH_SECRET, ALLOWED_EMAIL) and can sign in locally
 
 ## Phase 3: Core features
 - [x] Task: Phone utilities (TDD)
@@ -98,6 +98,7 @@ Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). 
 - [ ] Task: `/ship` checklist
   - From the slice 6–7 security pass: add a Content-Security-Policy that limits scripts (needs a nonce per request from the proxy, which makes pages dynamic); today the policy only sets frame-ancestors, base-uri and object-src.
 - [ ] Task: Deploy (slice 9)
+  - Status: live at https://dialwise-beta.vercel.app (Vercel project `dialwise`, functions in `sin1` next to the Neon database, Node 24 pinned in package.json). Production keys are set and the owner signs in on prod. Pushing to `main` on GitHub deploys it. Still to do: the 10k-lead speed check and Lighthouse.
   - Acceptance: Vercel project, env vars, prod migration, prod OAuth redirect
   - Check: whether to add Vercel's `attachDatabasePool` (closes idle connections before a function sleeps). Left out in slice 4 because its dependency pulled in an old Zod with a known advisory.
   - Verify: owner signs in on prod; 10k seeded leads on a Neon branch → queue < 300 ms; Lighthouse ≥ 90 on `/queue`
