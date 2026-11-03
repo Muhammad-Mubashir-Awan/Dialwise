@@ -1,4 +1,4 @@
-# Plan: Cold-Call CRM (personal, hosted)
+# Plan: Dialwise (personal cold-calling CRM, hosted)
 
 > Update (2026-10-29): this plan covers module `core-crm`. Phase 2 adds `pipeline`, `dialer` and `email-calendar`, each with its own spec and plan. See `CAPABILITY-MAP.md`. The core spec is now `SPEC-core-crm.md`, and `calls` gets dialer-ready fields (`channel`, `duration_sec`, `external_id`).
 

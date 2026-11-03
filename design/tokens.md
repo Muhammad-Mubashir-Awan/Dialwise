@@ -1,4 +1,4 @@
-# Design tokens: Cold-Call CRM
+# Design tokens: Dialwise
 
 Source: `design/prototype.html` (approved prototype). Direction: clean and dense, Linear-like, keyboard-first, light and dark, one teal accent on cool (teal-biased) neutrals. Slice 1 applies these to `src/app/globals.css` as shadcn CSS variables.
 

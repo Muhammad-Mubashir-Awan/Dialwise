@@ -25,9 +25,7 @@ test.describe("signed out", () => {
   test("a refused Google account sees why", async ({ page }) => {
     await page.goto("/login?error=AccessDenied");
     // Next's route announcer is also role="alert", so pick ours by its text.
-    await expect(page.getByRole("alert").filter({ hasText: "can't open this CRM" })).toContainText(
-      "Only the owner's Google account can sign in",
-    );
+    await expect(page.getByRole("alert").filter({ hasText: "allowed list" })).toContainText("Ask the owner to add it");
   });
 });
 

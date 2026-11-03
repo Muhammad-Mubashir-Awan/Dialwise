@@ -113,7 +113,9 @@ describe("loginRedirectPath", () => {
 
 describe("signInErrorMessage", () => {
   it("explains a refused account", () => {
-    expect(signInErrorMessage("AccessDenied")).toMatch(/only the owner's google account/i);
+    expect(signInErrorMessage("AccessDenied")).toBe(
+      "That Google account isn't on the allowed list for this CRM. Ask the owner to add it, or use another account.",
+    );
   });
 
   it("points to the setup when Google sign-in isn't configured", () => {

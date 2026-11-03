@@ -1,4 +1,4 @@
-# Capability Map: Cold-Call CRM
+# Capability Map: Dialwise
 
 One personal CRM for cold calling, built as modules. Each module has its own spec (`SPEC-<module-id>.md`), its screens added to `design/prototype.html`, and its own plan and tasks. Module ids are fixed; they never get renamed.
 

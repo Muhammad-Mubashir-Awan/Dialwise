@@ -1,4 +1,4 @@
-# Tasks: Cold-Call CRM
+# Tasks: Dialwise
 
 Source of truth: `SPEC-core-crm.md` (module `core-crm` in `CAPABILITY-MAP.md`). Plan: `tasks/plan.md`. Each task ends green: `npm run lint && npx tsc --noEmit && npm test`.
 

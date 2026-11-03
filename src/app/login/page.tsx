@@ -19,11 +19,11 @@ export default function LoginPage({ searchParams }: { searchParams: SearchParams
           <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
             <Phone aria-hidden="true" className="size-3.5" strokeWidth={2.25} />
           </span>
-          Cold-Call CRM
+          Dialwise
         </div>
         <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
         <p className="text-[13px] text-muted-foreground">
-          Only the owner&apos;s Google account can sign in. Other accounts are turned away.
+          Only Google accounts on the allowed list can sign in. Others are turned away.
         </p>
         {/* searchParams are request data: with Cache Components they're read inside a boundary. */}
         <Suspense fallback={<GoogleButton callbackUrl={undefined} />}>

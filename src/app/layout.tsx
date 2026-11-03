@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Cold-Call CRM", template: "%s · Cold-Call CRM" },
+  title: { default: "Dialwise", template: "%s · Dialwise" },
   description: "Personal CRM for cold calling: call queue, follow-ups, leads and stats.",
   robots: { index: false, follow: false },
 };

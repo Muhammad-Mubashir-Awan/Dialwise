@@ -46,7 +46,8 @@ export function loginRedirectPath(pathWithSearch: string): string {
 /** What to show on the sign-in page for an Auth.js error code (`?error=`). */
 export function signInErrorMessage(code: string | null | undefined): string | null {
   if (!code) return null;
-  if (code === "AccessDenied") return "That account can't open this CRM. Only the owner's Google account can sign in.";
+  if (code === "AccessDenied")
+    return "That Google account isn't on the allowed list for this CRM. Ask the owner to add it, or use another account.";
   if (code === "Configuration") {
     return "Google sign-in isn't set up yet. Check AUTH_SECRET, AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET in .env.local.";
   }

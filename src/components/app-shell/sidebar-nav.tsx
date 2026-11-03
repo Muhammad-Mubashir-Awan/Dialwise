@@ -26,7 +26,7 @@ export function SidebarNav({ counts }: { counts?: NavCounts }) {
         <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
           <Phone aria-hidden="true" className="size-3.5" strokeWidth={2.25} />
         </span>
-        Cold-Call CRM
+        Dialwise
       </div>
 
       {/* On pages whose address isn't known at build time (e.g. /leads/[id]), the links render

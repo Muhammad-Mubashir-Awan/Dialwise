@@ -14,7 +14,7 @@ export function withExplicitSsl(url: string): string {
 function createDb() {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is not set. Copy .env.example to .env.local and add your Neon connection string.");
+    throw new Error("DATABASE_URL is not set. Add your Neon connection string to .env.local (docs/SETUP.md, step 2).");
   }
   // A small pool: one person uses the app, and Neon's pooled connection string does the heavy pooling.
   // DATABASE_POOL_MAX=1 is used by the e2e server, whose in-memory database has a single session.

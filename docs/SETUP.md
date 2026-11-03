@@ -1,4 +1,4 @@
-# Setting up CRM Tool on your machine
+# Setting up Dialwise on your machine
 
 You need two outside accounts: **Google Cloud** (for "Continue with Google") and **Neon** (the database). Both are free at this size. Menu names below match the consoles as of October 2026 and may move a little over time.
 
@@ -7,15 +7,15 @@ Your keys go in `.env.local` in the project folder. That file is ignored by git,
 ## 1. Google sign-in
 
 1. Open https://console.cloud.google.com and sign in with the Google account you'll use for the CRM.
-2. Create a project: project picker at the top → **New project** → name it `CRM Tool` → **Create**, then select it.
+2. Create a project: project picker at the top → **New project** → name it `Dialwise` → **Create**, then select it.
 3. Set up the sign-in screen: menu → **Google Auth Platform** (older consoles: *APIs & Services → OAuth consent screen*) → **Get started**.
-   - App name: `CRM Tool`. User support email: your address.
+   - App name: `Dialwise`. User support email: your address.
    - Audience: **External**.
    - Contact email: your address. Accept the policy → **Create**.
 4. Allow your account: **Audience** → under *Test users* → **Add users** → your Gmail address → **Save**.
    Leaving the app in *Testing* is fine: it only asks Google for your name and email.
 5. Create the keys: **Clients** (older: *Credentials → Create credentials → OAuth client ID*) → **Create client**.
-   - Application type: **Web application**. Name: `CRM Tool local`.
+   - Application type: **Web application**. Name: `Dialwise local`.
    - Authorized JavaScript origins: `http://localhost:3000`
    - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
    - **Create**. Copy the **Client ID** and **Client secret** now; the secret is only shown in full once.

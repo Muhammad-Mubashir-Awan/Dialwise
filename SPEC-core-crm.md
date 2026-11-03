@@ -1,4 +1,4 @@
-# Spec: core-crm (Cold-Call CRM, personal)
+# Spec: core-crm (Dialwise, a personal cold-calling CRM)
 
 Module `core-crm` in [CAPABILITY-MAP.md](CAPABILITY-MAP.md). The phase-2 modules (`pipeline`, `dialer`, `email-calendar`) build on this one and get their own specs.
 
